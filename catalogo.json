@@ -1,0 +1,229 @@
+[
+  {
+    "id": 1,
+    "nombre": "Pokémon Rejuvenation",
+    "portada": "https://placehold.co/600x300/1a3450/93a9c2?text=Rejuvenation",
+    "capturas": [
+      "https://placehold.co/200x130/142b44/93a9c2?text=1",
+      "https://placehold.co/200x130/142b44/93a9c2?text=2",
+      "https://placehold.co/200x130/142b44/93a9c2?text=3",
+      "https://placehold.co/200x130/142b44/93a9c2?text=4"
+    ],
+    "descripcion": "Un fangame oscuro y complejo con una historia madura y un sistema de dificultad Intense.",
+    "urlDescarga": "https://github.com/octocat/Hello-World/archive/refs/heads/master.zip",
+    "categorias": [
+      "RPG",
+      "Aventura",
+      "Fan Game"
+    ],
+    "tiempoEstimado": "30 - 50 horas",
+    "desarrollador": "Rejuvenation Team",
+    "lanzamiento": "2023",
+    "logros": [
+      {
+        "id": "primeros_pasos",
+        "nombre": "Primeros pasos",
+        "descripcion": "Jugá al menos 1 minuto",
+        "requisitoMinutos": 1
+      },
+      {
+        "id": "entrenador_camino",
+        "nombre": "Entrenador en camino",
+        "descripcion": "Acumulá 5 minutos jugados",
+        "requisitoMinutos": 5
+      },
+      {
+        "id": "explorador",
+        "nombre": "Explorador",
+        "descripcion": "Acumulá 15 minutos jugados",
+        "requisitoMinutos": 15
+      },
+      {
+        "id": "coleccionista",
+        "nombre": "Coleccionista",
+        "descripcion": "Acumulá 30 minutos jugados",
+        "requisitoMinutos": 30
+      },
+      {
+        "id": "veterano",
+        "nombre": "Veterano",
+        "descripcion": "Acumulá 60 minutos jugados",
+        "requisitoMinutos": 60
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "nombre": "Pokémon Insurgence",
+    "portada": "https://placehold.co/600x300/1a3450/93a9c2?text=Insurgence",
+    "capturas": [
+      "https://placehold.co/200x130/142b44/93a9c2?text=1",
+      "https://placehold.co/200x130/142b44/93a9c2?text=2",
+      "https://placehold.co/200x130/142b44/93a9c2?text=3",
+      "https://placehold.co/200x130/142b44/93a9c2?text=4"
+    ],
+    "descripcion": "Introduce las Pokémon Delta, versiones alternativas de especies existentes, y una historia centrada en cultos.",
+    "urlDescarga": "https://github.com/octocat/Hello-World/archive/refs/heads/master.zip",
+    "categorias": [
+      "RPG",
+      "Aventura"
+    ],
+    "tiempoEstimado": "25 - 40 horas",
+    "desarrollador": "Insurgence Team",
+    "lanzamiento": "2015",
+    "logros": [
+      {
+        "id": "primeros_pasos",
+        "nombre": "Primeros pasos",
+        "descripcion": "Jugá al menos 1 minuto",
+        "requisitoMinutos": 1
+      },
+      {
+        "id": "entrenador_camino",
+        "nombre": "Entrenador en camino",
+        "descripcion": "Acumulá 5 minutos jugados",
+        "requisitoMinutos": 5
+      },
+      {
+        "id": "explorador",
+        "nombre": "Explorador",
+        "descripcion": "Acumulá 15 minutos jugados",
+        "requisitoMinutos": 15
+      },
+      {
+        "id": "coleccionista",
+        "nombre": "Coleccionista",
+        "descripcion": "Acumulá 30 minutos jugados",
+        "requisitoMinutos": 30
+      },
+      {
+        "id": "veterano",
+        "nombre": "Veterano",
+        "descripcion": "Acumulá 60 minutos jugados",
+        "requisitoMinutos": 60
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "nombre": "Pokémon Uranium",
+    "portada": "https://placehold.co/600x300/1a3450/93a9c2?text=Uranium",
+    "capturas": [
+      "https://placehold.co/200x130/142b44/93a9c2?text=1",
+      "https://placehold.co/200x130/142b44/93a9c2?text=2",
+      "https://placehold.co/200x130/142b44/93a9c2?text=3",
+      "https://placehold.co/200x130/142b44/93a9c2?text=4"
+    ],
+    "descripcion": "Un fangame con más de 190 Pokémon fanmade y un nuevo tipo: Nuclear.",
+    "urlDescarga": "https://github.com/octocat/Hello-World/archive/refs/heads/master.zip",
+    "categorias": [
+      "RPG",
+      "Fan Game"
+    ],
+    "tiempoEstimado": "20 - 30 horas",
+    "desarrollador": "Uranium Team",
+    "lanzamiento": "2016",
+    "logros": [
+      {
+        "id": "primeros_pasos",
+        "nombre": "Primeros pasos",
+        "descripcion": "Jugá al menos 1 minuto",
+        "requisitoMinutos": 1
+      },
+      {
+        "id": "entrenador_camino",
+        "nombre": "Entrenador en camino",
+        "descripcion": "Acumulá 5 minutos jugados",
+        "requisitoMinutos": 5
+      },
+      {
+        "id": "explorador",
+        "nombre": "Explorador",
+        "descripcion": "Acumulá 15 minutos jugados",
+        "requisitoMinutos": 15
+      },
+      {
+        "id": "coleccionista",
+        "nombre": "Coleccionista",
+        "descripcion": "Acumulá 30 minutos jugados",
+        "requisitoMinutos": 30
+      },
+      {
+        "id": "veterano",
+        "nombre": "Veterano",
+        "descripcion": "Acumulá 60 minutos jugados",
+        "requisitoMinutos": 60
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "nombre": "Pokémon Añil",
+    "portada": "https://placehold.co/600x300/1a3450/93a9c2?text=Pokemon+Anil",
+    "capturas": [
+      "https://placehold.co/200x130/142b44/93a9c2?text=1",
+      "https://placehold.co/200x130/142b44/93a9c2?text=2"
+    ],
+    "descripcion": "Tu propio fangame instalado localmente, usado para probar la conexión real del launcher (Jugar de verdad y conteo de horas).",
+    "urlDescarga": "https://github.com/octocat/Hello-World/archive/refs/heads/master.zip",
+    "rutaEjecutable": "D:\\JUEGOS\\Pokemon\\Pokemon Anil V4.13\\Game.exe",
+    "carpetaGuardadoAppData": "Pokemon Anil",
+    "categorias": [
+      "RPG",
+      "Aventura",
+      "Fan Game"
+    ],
+    "tiempoEstimado": "Desconocido",
+    "desarrollador": "Equipo Añil",
+    "lanzamiento": "2025",
+    "logros": [
+      {
+        "id": "primer_guardado",
+        "nombre": "Primeros pasos",
+        "descripcion": "Creá tu primera partida guardada",
+        "tipo": "guardado"
+      },
+      {
+        "id": "sesion_larga",
+        "nombre": "Sesión maratónica",
+        "descripcion": "Jugá 20 minutos seguidos en una sola sesión",
+        "tipo": "sesion",
+        "requisitoMinutos": 20
+      },
+      {
+        "id": "progreso_real",
+        "nombre": "Aventurero",
+        "descripcion": "Tu partida guardada superó los 50 KB de progreso",
+        "tipo": "tamano",
+        "requisitoKB": 50
+      },
+      {
+        "id": "jugador_constante",
+        "nombre": "Entrenador constante",
+        "descripcion": "Jugá en 3 días distintos",
+        "tipo": "dias",
+        "requisitoDias": 3
+      },
+      {
+        "id": "veterano",
+        "nombre": "Veterano",
+        "descripcion": "Acumulá 60 minutos jugados en total",
+        "tipo": "acumulado",
+        "requisitoMinutos": 60
+      },
+      {
+        "id": "primer_pokemon_real",
+        "nombre": "¡Consigue tu primer Pokémon!",
+        "descripcion": "Arrancá tu viaje con tu primer compañero Pokémon",
+        "tipo": "primerPokemonReal"
+      },
+      {
+        "id": "primera_captura_real",
+        "nombre": "¡Captura tu primer Pokémon!",
+        "descripcion": "Atrapá a tu primer Pokémon salvaje",
+        "tipo": "capturasReales",
+        "requisito": 2
+      }
+    ]
+  }
+]

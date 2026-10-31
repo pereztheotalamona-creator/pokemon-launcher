@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Aviso de logro</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+  body { display: flex; align-items: center; justify-content: flex-end; padding: 10px; }
+
+  /* Los colores vienen del diseño activo del launcher (main.js los manda con cada aviso).
+     Si por algo no llegan, se usan estos valores del diseño PC. */
+  #toast {
+    --t-fondo-1: var(--bg-panel-claro, #1a3450);
+    --t-fondo-2: var(--bg-panel, #102338);
+    --t-acento:  var(--accent-cyan, #5ac8ff);
+    --t-acento-2: var(--accent-red-light, #8fdcff);
+    --t-texto:   var(--text-white, #ffffff);
+    --t-sub:     var(--text-light, #93a9c2);
+    --t-borde:   var(--border-soft, rgba(255,255,255,0.1));
+    --dur: 5500ms;
+
+    position: relative; overflow: hidden;
+    width: 100%; height: 92px;
+    display: flex; align-items: center; gap: 14px; padding: 12px 18px 14px 16px;
+    background:
+      radial-gradient(ellipse at 0% 50%, color-mix(in srgb, var(--t-acento) 22%, transparent), transparent 60%),
+      linear-gradient(135deg, var(--t-fondo-1) 0%, var(--t-fondo-2) 100%);
+    border: 1px solid color-mix(in srgb, var(--t-acento) 50%, var(--t-borde));
+    border-left: 5px solid var(--t-acento);
+    border-radius: 12px;
+    color: var(--t-texto);
+    box-shadow: 0 10px 28px rgba(0,0,0,.55), 0 0 22px color-mix(in srgb, var(--t-acento) 28%, transparent);
+    transform: translateX(118%) scale(.96); opacity: 0;
+    transition: transform .5s cubic-bezier(.2,1.1,.3,1), opacity .35s ease;
+  }
+  #toast.visible { transform: translateX(0) scale(1); opacity: 1; }
+
+  /* Destello que cruza el cartel al aparecer */
+  .brillo {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(105deg, transparent 32%, rgba(255,255,255,.30) 50%, transparent 68%);
+    transform: translateX(-130%);
+  }
+  #toast.visible .brillo { animation: pasar-brillo 1s ease-out .4s 1 forwards; }
+  @keyframes pasar-brillo { to { transform: translateX(130%); } }
+
+  /* Ícono con aro */
+  .marco-icono {
+    position: relative; flex-shrink: 0;
+    width: 60px; height: 60px; border-radius: 12px; padding: 2px;
+    background: linear-gradient(135deg, var(--t-acento-2), var(--t-acento));
+    box-shadow: 0 4px 14px rgba(0,0,0,.45), 0 0 14px color-mix(in srgb, var(--t-acento) 40%, transparent);
+    transform: scale(.6); opacity: 0;
+  }
+  #toast.visible .marco-icono { animation: aparecer-icono .5s cubic-bezier(.3,1.6,.5,1) .25s forwards; }
+  @keyframes aparecer-icono { to { transform: scale(1); opacity: 1; } }
+  .icono { width: 100%; height: 100%; border-radius: 10px; }
+  #img { object-fit: cover; background: #0f1b2b; display: none; }
+  #fallback {
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #ffd24d, #c98a00); color: #3a2400;
+  }
+  #fallback svg { width: 30px; height: 30px; }
+
+  .texto { min-width: 0; flex: 1; }
+  #etiqueta {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase;
+    color: var(--t-acento-2);
+  }
+  #etiqueta svg { width: 12px; height: 12px; flex-shrink: 0; }
+  #nombre { font-size: 16px; font-weight: 700; margin-top: 2px; line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+  #desc { font-size: 12px; color: var(--t-sub); margin-top: 3px; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Barrita que se vacía mientras el cartel está en pantalla */
+  .tiempo { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.06); }
+  .tiempo i { display: block; height: 100%; width: 100%; transform-origin: left center;
+    background: linear-gradient(90deg, var(--t-acento), var(--t-acento-2)); }
+  #toast.visible .tiempo i { animation: vaciar var(--dur) linear .5s forwards; }
+  @keyframes vaciar { to { transform: scaleX(0); } }
+
+  /* ============ Toques propios de cada diseño ============ */
+
+  /* Pokémon Z Dorado: marco doble de oro, letras de libro antiguo y ornamentos */
+  html[data-tema="pokemon-z-dorado"] #toast {
+    border-radius: 3px;
+    border: 1px solid var(--t-acento);
+    border-left: 5px solid var(--t-acento-2);
+    box-shadow: inset 0 0 0 3px var(--t-fondo-2), inset 0 0 0 4px rgba(207,164,67,.5),
+                0 10px 28px rgba(0,0,0,.6), 0 0 24px rgba(207,164,67,.35);
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  }
+  html[data-tema="pokemon-z-dorado"] #etiqueta { font-variant: small-caps; letter-spacing: 2.5px; font-size: 12px; text-transform: none; }
+  html[data-tema="pokemon-z-dorado"] #etiqueta::before { content: '❦'; }
+  html[data-tema="pokemon-z-dorado"] #etiqueta::after { content: '❦'; }
+  html[data-tema="pokemon-z-dorado"] #nombre { letter-spacing: .6px; color: var(--t-acento-2); }
+  html[data-tema="pokemon-z-dorado"] #desc { font-family: Georgia, serif; font-style: italic; }
+  html[data-tema="pokemon-z-dorado"] .marco-icono, html[data-tema="pokemon-z-dorado"] .icono { border-radius: 3px; }
+
+  /* Ultraball / Masterball / Honorball: esquinas más rectas y marcadas */
+  html[data-tema="ultraball"] #toast, html[data-tema="masterball"] #toast, html[data-tema="honorball"] #toast { border-radius: 4px; }
+  html[data-tema="ultraball"] #nombre { text-transform: uppercase; letter-spacing: .8px; font-size: 14.5px; }
+
+  /* Cielo Estrellado: estrellitas fijas sobre el fondo */
+  html[data-tema="cielo-estrellado"] #toast {
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,.85) 0 1px, transparent 1.6px),
+      radial-gradient(circle, rgba(143,163,255,.6) 0 1px, transparent 1.8px),
+      radial-gradient(ellipse at 0% 50%, color-mix(in srgb, var(--t-acento) 22%, transparent), transparent 60%),
+      linear-gradient(135deg, var(--t-fondo-1) 0%, var(--t-fondo-2) 100%);
+    background-size: 70px 70px, 110px 110px, 100% 100%, 100% 100%;
+    background-position: 8px 12px, 40px 50px, 0 0, 0 0;
+  }
+
+  /* Blanco: sombra más suave */
+  html[data-tema="blanco"] #toast { box-shadow: 0 8px 22px rgba(20,40,60,.28), 0 0 14px color-mix(in srgb, var(--t-acento) 22%, transparent); }
+  html[data-tema="blanco"] #nombre { text-shadow: none; }
+
+  @media (prefers-reduced-motion: reduce) { #toast, .marco-icono { transition: none; } .brillo { display: none; } }
+</style>
+</head>
+<body>
+  <div id="toast">
+    <div class="brillo"></div>
+    <div class="marco-icono">
+      <img id="img" class="icono" alt="">
+      <div id="fallback" class="icono">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-2V3a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v1H5a1 1 0 0 0-1 1v2a4 4 0 0 0 3.4 3.95A5 5 0 0 0 11 14.9V17H9a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2v-2.1a5 5 0 0 0 3.6-3.95A4 4 0 0 0 20 7V5a1 1 0 0 0-1-1ZM6 7V6h1v3.2A2 2 0 0 1 6 7Zm12 0a2 2 0 0 1-1 2.2V6h1Z"/></svg>
+      </div>
+    </div>
+    <div class="texto">
+      <div id="etiqueta"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 16.9 5.9 20.4l1.5-6.8L2.2 9l6.9-.7L12 2z"/></svg><span>Logro desbloqueado</span></div>
+      <div id="nombre"></div>
+      <div id="desc"></div>
+    </div>
+    <div class="tiempo"><i></i></div>
+  </div>
+
+<script>
+  // Poné false si no querés el sonidito.
+  const SONIDO = true;
+
+  const toast = document.getElementById('toast');
+  const img = document.getElementById('img');
+  const fallback = document.getElementById('fallback');
+  let variablesAplicadas = [];
+
+  function sonar() {
+    if (!SONIDO) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const t = ctx.currentTime;
+      [[880, 0], [1320, 0.13]].forEach(([frecuencia, retraso]) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = frecuencia;
+        gain.gain.setValueAtTime(0, t + retraso);
+        gain.gain.linearRampToValueAtTime(0.16, t + retraso + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + retraso + 0.6);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(t + retraso);
+        osc.stop(t + retraso + 0.65);
+      });
+      setTimeout(() => ctx.close(), 1200);
+    } catch (e) {}
+  }
+
+  // Aplica los colores del diseño activo del launcher (id + variables CSS).
+  function aplicarTema(tema) {
+    const raiz = document.documentElement;
+    variablesAplicadas.forEach(k => raiz.style.removeProperty(k));
+    variablesAplicadas = [];
+    raiz.removeAttribute('data-tema');
+    if (!tema || typeof tema !== 'object') return;
+    if (tema.id) raiz.setAttribute('data-tema', String(tema.id));
+    Object.entries(tema.variables || {}).forEach(([clave, valor]) => {
+      if (typeof clave === 'string' && clave.startsWith('--') && typeof valor === 'string') {
+        raiz.style.setProperty(clave, valor);
+        variablesAplicadas.push(clave);
+      }
+    });
+  }
+
+  // Devuelve una promesa que se resuelve cuando el cartel ya entró (espera a que cargue la imagen).
+  function mostrarLogro(l, tema) {
+    return new Promise(resolve => {
+      aplicarTema(tema);
+      document.getElementById('nombre').textContent = l.nombre;
+      document.getElementById('desc').textContent = l.descripcion;
+      toast.style.setProperty('--dur', Math.max(1500, (l.duracion || 5500) - 500) + 'ms');
+
+      let listo = false;
+      const entrar = (conImagen) => {
+        if (listo) return;
+        listo = true;
+        img.style.display = conImagen ? 'block' : 'none';
+        fallback.style.display = conImagen ? 'none' : 'flex';
+        toast.classList.add('visible');
+        sonar();
+        resolve();
+      };
+
+      if (l.imagen) {
+        img.onload = () => entrar(true);
+        img.onerror = () => entrar(false);
+        img.removeAttribute('src');
+        img.src = l.imagen;
+        setTimeout(() => entrar(false), 2500); // si la imagen tarda demasiado, entra igual sin ella
+      } else {
+        entrar(false);
+      }
+    });
+  }
+
+  function ocultarLogro() {
+    toast.classList.remove('visible');
+  }
+</script>
+</body>
+</html>
