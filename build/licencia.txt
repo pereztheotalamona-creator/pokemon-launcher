@@ -1,0 +1,9 @@
+﻿POKÉMON LAUNCHER
+
+Este programa es un proyecto de fans, gratuito y no oficial. No está afiliado, asociado ni respaldado por Nintendo, Game Freak, Creatures Inc. ni The Pokémon Company. Pokémon y los nombres de sus personajes son marcas registradas de sus respectivos dueños.
+
+El launcher no incluye juegos: solo ayuda a descargarlos desde las páginas de sus creadores y a organizar tu biblioteca. Cada juego pertenece a sus creadores y se rige por sus propias condiciones.
+
+El programa se ofrece "tal cual", sin garantías de ningún tipo. Tus datos (progreso, logros y configuración) se guardan en tu propia computadora.
+
+Al continuar con la instalación aceptás estas condiciones.
