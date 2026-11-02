@@ -1409,6 +1409,8 @@ function createWindow() {
     height: 800,
     frame: false,
     transparent: true,
+    // Ícono de la ventana y de la barra de tareas (icon.ico va al lado del main.js)
+    icon: path.join(__dirname, 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }

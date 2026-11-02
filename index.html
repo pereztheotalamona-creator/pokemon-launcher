@@ -130,8 +130,9 @@
         #ccd6dc 100%);
     box-shadow:
       inset -8px -10px 16px rgba(0,0,0,0.4),
-      inset 6px 6px 12px rgba(255,255,255,0.3),
-      0 10px 22px rgba(0,0,0,0.5);
+      inset 6px 6px 12px rgba(255,255,255,0.3);
+    /* Sin sombra exterior: el clip-path de cada mitad la recortaba en forma de cuadrado.
+       La sombra del suelo la da .pokeball-sombra. */
     transition: transform 0.55s cubic-bezier(0.55, 0, 0.55, 1), opacity 0.5s ease-in;
   }
 
@@ -8598,6 +8599,29 @@
   .modal-apoyo-card .redes-grupo { justify-content: center; }
   .modal-apoyo-card .redes-grupo-nombre { min-width: 0; width: 100%; text-align: center; }
 
+  /* Ventana "Apoyá el proyecto" (links + agradecimiento) */
+  .modal-apoyo-card.proyecto { width: min(480px, 100%); }
+  .modal-apoyo-card.proyecto .apoyo-disclaimer { max-width: 400px; margin: 0 auto; font-size: 13.5px; line-height: 1.6; }
+  .modal-apoyo-card.proyecto .apoyo-disclaimer + .apoyo-disclaimer { margin-top: 10px; }
+  .apoyo-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+  .apoyo-link {
+    --rc: #93a9c2;
+    display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+    border-radius: 13px; border: 1px solid var(--border-soft); background: var(--bg-card);
+    color: var(--text-white); font: inherit; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer;
+    transition: transform 0.15s, background 0.18s, border-color 0.18s, box-shadow 0.2s;
+  }
+  .apoyo-link svg { flex: none; width: 22px; height: 22px; color: var(--rc); transition: color 0.18s; }
+  .apoyo-link:hover { transform: translateY(-2px); background: var(--rc); border-color: transparent; box-shadow: 0 6px 16px color-mix(in srgb, var(--rc) 50%, transparent); }
+  .apoyo-link:hover svg { color: #fff; }
+  .apoyo-link.kofi { --rc: #29abe0; }
+  .apoyo-link.cafecito { --rc: #6f4e37; }
+  .apoyo-link.youtube { --rc: #ff3b3b; }
+  .apoyo-link.x { --rc: #3a4658; }
+  .apoyo-link.x svg { color: #e8eef7; }
+  .apoyo-link.instagram { --rc: #e1306c; grid-column: 1 / -1; }
+  @media (max-width: 420px) { .apoyo-links { grid-template-columns: 1fr; } }
+
   /* Ventana "¡Apoya a <creador>!" */
   #modal-apoyo {
     position: fixed; inset: 0; z-index: 900;
@@ -8965,6 +8989,108 @@
   :where(body.diseno-claro) .rs-titulo { color: #fff; }
   :where(body.diseno-claro) .rs-juego { color: rgba(255,255,255,0.82); }
   :where(body.diseno-claro) .rs-etiqueta { color: color-mix(in srgb, var(--accent-cyan) 55%, #fff); }
+</style>
+<style id="config-mejorada-css">
+/* ===== Configuración mejorada: menú lateral por grupos, tarjetas prolijas y opciones de accesibilidad ===== */
+@keyframes cfg-entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+#configuracion-contenido { display: grid; grid-template-columns: 244px minmax(0, 1fr); column-gap: 28px; align-items: start; max-width: 1120px; }
+#configuracion-contenido > .config-seccion, #configuracion-contenido > .config-sin-resultados { grid-column: 2; }
+
+/* --- menú lateral --- */
+#configuracion-contenido .config-tabs {
+  grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 0; display: flex; flex-direction: column; gap: 3px; margin: 0;
+  padding: 14px 12px 16px; background: var(--bg-panel); border: 1px solid var(--border-soft); border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+}
+.config-buscar { display: flex; align-items: center; gap: 8px; padding: 0 11px; height: 38px; margin-bottom: 6px; border-radius: 11px; background: var(--bg-main); border: 1px solid var(--border-soft); color: var(--text-light); transition: border-color .18s, box-shadow .18s; }
+.config-buscar:focus-within { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 22%, transparent); color: var(--text-white); }
+.config-buscar input { flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--text-white); font-size: 12.5px; font-family: inherit; }
+.config-buscar input::placeholder { color: var(--text-light); opacity: .8; }
+.config-buscar input::-webkit-search-cancel-button { filter: invert(.7); cursor: pointer; }
+.config-grupo { margin: 14px 8px 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .9px; text-transform: uppercase; color: var(--text-light); opacity: .8; }
+#configuracion-contenido .config-tab {
+  display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 10px; border: 1px solid transparent; border-radius: 12px; background: none; color: var(--text-light);
+  font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; position: relative; transition: background-color .16s, color .16s, border-color .16s, transform .16s;
+}
+#configuracion-contenido .config-tab:hover { background: color-mix(in srgb, var(--accent-cyan) 9%, transparent); color: var(--text-white); transform: translateX(2px); border-color: transparent; }
+#configuracion-contenido .config-tab-ico { flex: none; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--text-light) 14%, transparent); transition: background .16s, color .16s; }
+#configuracion-contenido .config-tab-ico .ic { width: 16px; height: 16px; }
+#configuracion-contenido .config-tab.activa { background: color-mix(in srgb, var(--accent-cyan) 16%, transparent); color: var(--text-white); border-color: color-mix(in srgb, var(--accent-cyan) 40%, transparent); }
+#configuracion-contenido .config-tab.activa::before { content: ''; position: absolute; left: -12px; top: 9px; bottom: 9px; width: 4px; border-radius: 0 4px 4px 0; background: var(--accent-cyan); }
+#configuracion-contenido .config-tab.activa .config-tab-ico { background: var(--accent-cyan); color: #06222f; }
+.buscando .config-tab.activa { background: none; border-color: transparent; color: var(--text-light); }
+.buscando .config-tab.activa::before { display: none; }
+.buscando .config-tab.activa .config-tab-ico { background: color-mix(in srgb, var(--text-light) 14%, transparent); color: inherit; }
+
+/* --- secciones --- */
+#configuracion-contenido .config-seccion.activa { animation: cfg-entra .28s ease both; }
+.buscando .config-seccion { display: block; }
+.config-seccion.sin-coincidencias { display: none !important; }
+.config-bloque[hidden], .config-sin-resultados[hidden], .config-subtitulo[hidden] { display: none !important; }
+.config-cabecera { display: flex; align-items: center; gap: 16px; margin: 0 0 20px; padding: 18px 20px; border-radius: 16px; border: 1px solid var(--border-soft);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent-cyan) 16%, var(--bg-panel)), var(--bg-panel) 70%); }
+.config-cab-ico { flex: none; width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: var(--accent-cyan); color: #06222f; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-cyan) 35%, transparent); }
+.config-cab-ico .ic { width: 22px; height: 22px; }
+.config-cabecera h2 { margin: 0 0 3px; font-size: 18px; color: var(--text-white); }
+.config-cabecera p { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-light); }
+.buscando .config-cabecera { padding: 10px 14px; margin-bottom: 12px; }
+.buscando .config-cabecera p { display: none; }
+.buscando .config-cab-ico { width: 32px; height: 32px; border-radius: 10px; }
+.buscando .config-cab-ico .ic { width: 16px; height: 16px; }
+.buscando .config-cabecera h2 { margin: 0; font-size: 14px; }
+
+.config-subtitulo { display: flex; align-items: center; gap: 12px; margin: 26px 2px 12px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--accent-cyan); }
+.config-subtitulo::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan) 45%, transparent), transparent); }
+.config-cabecera + .config-subtitulo { margin-top: 6px; }
+
+/* --- tarjetas --- */
+#configuracion-contenido .config-bloque { max-width: none; margin-bottom: 14px; padding: 20px 22px; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+  transition: border-color .2s, box-shadow .2s; }
+#configuracion-contenido .config-bloque:hover { border-color: color-mix(in srgb, var(--accent-cyan) 35%, var(--border-soft)); box-shadow: 0 10px 26px rgba(0,0,0,0.2); }
+#configuracion-contenido .config-bloque h3 { font-size: 15px; margin-bottom: 5px; }
+#configuracion-contenido .config-bloque .config-descripcion { font-size: 12.5px; line-height: 1.5; margin-bottom: 14px; }
+#configuracion-contenido .config-fila-switch { padding: 13px 0; }
+#configuracion-contenido .config-fila-switch .etiqueta-switch { font-size: 13.5px; font-weight: 600; }
+.config-acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+.config-nota-pie { margin: 4px 4px 0; font-size: 12px; color: var(--text-light); }
+.config-nota-pie b { color: var(--text-white); }
+.config-sin-resultados { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 22px; border: 1px dashed var(--border-soft); border-radius: 16px; color: var(--text-light); font-size: 13px; }
+.config-sin-resultados b { color: var(--text-white); }
+
+/* --- controles --- */
+#configuracion-contenido .switch { width: 48px; height: 27px; }
+#configuracion-contenido .switch .pista { border-radius: 27px; }
+#configuracion-contenido .switch .pista::before { width: 19px; height: 19px; left: 3px; top: 3px; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+#configuracion-contenido .switch input:checked + .pista { background-color: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 0 12px color-mix(in srgb, var(--accent-cyan) 45%, transparent); }
+#configuracion-contenido .switch input:checked + .pista::before { transform: translateX(21px); background-color: #fff; }
+#configuracion-contenido .switch input:focus-visible + .pista { outline: 2px solid var(--text-white); outline-offset: 2px; }
+.cfg-select { background: var(--bg-main); color: var(--text-white); border: 1px solid var(--border-soft); border-radius: 10px; padding: 9px 12px; font-size: 13px; font-family: inherit; min-width: 170px; cursor: pointer; outline: none; transition: border-color .15s, box-shadow .15s; }
+.cfg-select:hover { border-color: var(--accent-cyan); }
+.cfg-select:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 22%, transparent); }
+#configuracion-contenido .config-fila input[type="range"], .config-fila input[type="range"] {
+  -webkit-appearance: none; appearance: none; height: 20px; background: transparent; cursor: pointer; --p: 50%; }
+#configuracion-contenido input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-cyan) var(--p), color-mix(in srgb, var(--text-light) 28%, transparent) var(--p)); }
+#configuracion-contenido input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; background: #fff; border: 2px solid var(--accent-cyan); box-shadow: 0 1px 5px rgba(0,0,0,.45); transition: transform .15s; }
+#configuracion-contenido input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.18); }
+#configuracion-contenido .config-fila span.valor { font-weight: 700; color: var(--accent-cyan); }
+
+/* --- accesibilidad / rendimiento (las activa la Configuración) --- */
+body.reducir-animaciones *, body.reducir-animaciones *::before, body.reducir-animaciones *::after {
+  animation-duration: 0.001ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+body.ventana-inactiva *, body.ventana-inactiva *::before, body.ventana-inactiva *::after { animation-play-state: paused !important; }
+body.sin-desenfoque *, body.sin-desenfoque *::before, body.sin-desenfoque *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+body.alto-contraste { --text-light: #ffffff !important; --border-soft: rgba(255,255,255,0.55) !important; }
+body.alto-contraste .config-bloque, body.alto-contraste .btn-outline, body.alto-contraste .cfg-select { border-width: 2px; }
+body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outline-offset: 3px !important; border-radius: 6px; }
+
+@media (max-width: 900px) {
+  #configuracion-contenido { grid-template-columns: 1fr; }
+  #configuracion-contenido .config-tabs { grid-column: 1; grid-row: auto; position: static; flex-direction: row; flex-wrap: wrap; }
+  #configuracion-contenido > .config-seccion, #configuracion-contenido > .config-sin-resultados { grid-column: 1; }
+  .config-grupo, .config-buscar { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { #configuracion-contenido .config-seccion.activa { animation: none; } }
 </style>
 </head>
 <body>
@@ -9366,7 +9492,19 @@
     camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
     feedback: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/>',
     arrowUp: '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>',
-    arrowDown: '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>'
+    arrowDown: '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>',
+    volumen: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+    campana: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    ojo: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>',
+    disco: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.7-4 3-9 3s-9-1.3-9-3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/>',
+    llave: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
+    rayo: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    teclado: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+    subir: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+    bajar: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    reiniciar: '<polyline points="1 4 1 10 7 10"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/>',
+    engranaje: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+    paleta: '<circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2H17a5 5 0 0 0 5-5c0-4.9-4.5-8.4-10-8.4z"/>'
   };
 
   function icono(nombre, clase) {
@@ -9536,12 +9674,39 @@
     requestAnimationFrame(() => m.classList.add('visible'));
   }
 
+  const LINKS_APOYO_PROYECTO = [
+    { id: 'kofi',     nombre: 'Ko-fi',    url: 'https://ko-fi.com/dexado',          svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.5h13.2v8.2a4.3 4.3 0 0 1-4.3 4.3H7.3A4.3 4.3 0 0 1 3 14.7V6.5zm13.2 1.7h1.5a2.6 2.6 0 0 1 0 5.2h-1.5V8.2zm0 1.5v2.2h1.5a1.1 1.1 0 0 0 0-2.2h-1.5zM9.6 15.6l-2.4-2.3a1.5 1.5 0 0 1 2.1-2.1l.3.3.3-.3a1.5 1.5 0 0 1 2.1 2.1l-2.4 2.3z"/></svg>' },
+    { id: 'cafecito', nombre: 'Cafecito', url: 'https://cafecito.app/dexado',       svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3v2M12 3v2"/></svg>' },
+    { id: 'youtube',  nombre: 'YouTube',  url: 'https://www.youtube.com/@Dexado',   svg: null },
+    { id: 'x',        nombre: 'X',        url: 'https://x.com/Dexado2',             svg: null },
+    { id: 'instagram', nombre: 'Instagram · Eric Lostie', url: 'https://www.instagram.com/eric.lostie/?hl=es', svg: null }
+  ];
+
   function apoyarProyecto() {
-    if (!APOYO_PROYECTO_URL) {
-      mostrarAvisoApoyo('¡Gracias! El link para apoyar el proyecto todavía no está configurado.');
-      return;
-    }
-    abrirEnlaceExterno(APOYO_PROYECTO_URL);
+    cerrarModalApoyo(true);
+    const botones = LINKS_APOYO_PROYECTO.map((l, i) => {
+      const svg = l.svg || ((typeof REDES_CREADOR !== 'undefined' && REDES_CREADOR.find(r => r.id === l.id)) || {}).svg || '';
+      return `<button type="button" class="apoyo-link ${l.id}" data-i="${i}" title="${l.url}">${svg}<span>${l.nombre}</span></button>`;
+    }).join('');
+    const m = document.createElement('div');
+    m.id = 'modal-apoyo';
+    m.innerHTML = `
+      <div class="modal-apoyo-card proyecto" role="dialog" aria-modal="true" aria-labelledby="modal-apoyo-titulo">
+        <button type="button" class="modal-apoyo-cerrar" aria-label="Cerrar">${icono('x')}</button>
+        <div class="modal-apoyo-corazon">${icono('heart')}</div>
+        <h2 id="modal-apoyo-titulo">¡Gracias por descargar PokeLauncher!</h2>
+        <p class="apoyo-disclaimer">Si querés colaborar, aceptamos donaciones: se usan para cubrir el costo de las herramientas y los servicios que hacen falta para mantener el proyecto en funcionamiento.</p>
+        <p class="apoyo-disclaimer">Y si no podés donar, seguime en mis redes sociales: también es una gran ayuda.</p>
+        <div class="apoyo-links">${botones}</div>
+      </div>`;
+    document.body.appendChild(m);
+    m.onclick = (e) => { if (e.target === m) cerrarModalApoyo(); };
+    m.querySelector('.modal-apoyo-cerrar').onclick = () => cerrarModalApoyo();
+    m.querySelectorAll('.apoyo-link').forEach(b => {
+      b.onclick = () => abrirEnlaceExterno(LINKS_APOYO_PROYECTO[+b.dataset.i].url);
+    });
+    document.addEventListener('keydown', teclaModalApoyo);
+    requestAnimationFrame(() => m.classList.add('visible'));
   }
   let juegoSeleccionadoTienda = null;
   let juegoSeleccionadoBiblioteca = null;
@@ -9593,7 +9758,20 @@
     sonidosPersonalizados: false, // apagado: cada estilo usa su música y sus sonidos. Encendido: usás los que elijas abajo
     musicaElegida: 'estilo',      // 'estilo' | 'ninguna' | id de cualquier estilo
     sonidoNavElegido: 'estilo',   // 'estilo' | 'original' | id de cualquier estilo
-    sonidoConfigElegido: 'estilo'
+    sonidoConfigElegido: 'estilo',
+    // ---- opciones de la Configuración mejorada ----
+    vistaInicial: 'inicio',        // 'inicio' | 'biblioteca' | 'tienda' | 'logros' | 'ultima'
+    ultimaVista: 'inicio',
+    ordenBibliotecaInicial: 'reciente', // 'reciente' | 'nombre' | 'horas'
+    mostrarResumenPartida: true,   // el resumen que aparece al cerrar un juego
+    avisosMensajes: true,          // aviso en pantalla cuando un amigo te escribe
+    duracionAvisoMensaje: 5,       // segundos
+    avisosEscritorio: true,        // aviso del sistema cuando el launcher no está al frente
+    reducirAnimaciones: false,
+    pausarEnSegundoPlano: true,    // congela las animaciones del estilo cuando la ventana no está al frente
+    sinDesenfoque: false,          // apaga los efectos de vidrio esmerilado (más liviano)
+    altoContraste: false,
+    focoVisible: false             // resalta con un contorno grueso lo que seleccionás con el teclado
   };
 
   let configuracionActual = { ...CONFIG_POR_DEFECTO };
@@ -10145,6 +10323,8 @@
     // F12 la reserva Windows (depurador): no se puede registrar y el juego la recibe (reinicia RPG Maker).
     if (!configuracionActual.teclaCaptura || configuracionActual.teclaCaptura === 'F12') configuracionActual.teclaCaptura = CONFIG_POR_DEFECTO.teclaCaptura;
     if (typeof presAlCargarConfig === 'function') presAlCargarConfig();
+    ordenBiblioteca = ['reciente', 'nombre', 'horas'].includes(configuracionActual.ordenBibliotecaInicial) ? configuracionActual.ordenBibliotecaInicial : 'reciente';
+    aplicarOpcionesInterfaz();
     juegosDeEjemplo = await window.api.cargarCatalogo();
 
     const datosGuardados = cargarBibliotecaCuenta();
@@ -10436,6 +10616,7 @@
       </select>
       ${icono('chevronDown', 'sm')}
     `;
+    document.getElementById('orden-biblioteca').value = ordenBiblioteca;
     document.getElementById('orden-biblioteca').onchange = (e) => {
       ordenBiblioteca = e.target.value;
       renderizarListaBiblioteca();
@@ -14259,7 +14440,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
     persistir();
     renderizarTodo();
 
-    mostrarResumenPartida(juegoGuardado, resultado, logrosNuevos);
+    if (configuracionActual.mostrarResumenPartida !== false) mostrarResumenPartida(juegoGuardado, resultado, logrosNuevos);
   }
 
   /* ===================== RESUMEN DE PARTIDA ===================== */
@@ -14491,16 +14672,62 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
 
   /* ===================== CONFIGURACIÓN ===================== */
 
-  let seccionConfigActiva = 'sonido';
+  let seccionConfigActiva = 'general';
 
+  const VISTAS_RECORDABLES = ['inicio', 'biblioteca', 'tienda', 'logros', 'perfil', 'capturas'];
+
+  /* Las secciones se agrupan en el menú lateral. `desc` es la bajada que se ve arriba de cada sección. */
   const SECCIONES_CONFIG = [
-    { id: 'sonido',  icono: 'message',  titulo: 'Sonido' },
-    { id: 'diseno',  icono: 'palette',  titulo: 'Diseño' },
-    { id: 'capturas', icono: 'camera',  titulo: 'Capturas' },
-    { id: 'datos',   icono: 'book',     titulo: 'Datos y almacenamiento' },
-    { id: 'desarrollo',  icono: 'wrench',     titulo: 'Desarrollo' },
-    { id: 'acerca',  icono: 'info',     titulo: 'Acerca de' }
+    { id: 'general',        grupo: 'Launcher',       icono: 'engranaje',     titulo: 'General',                      desc: 'Cómo arranca el launcher y cómo se comporta tu biblioteca.' },
+    { id: 'diseno',         grupo: 'Launcher',       icono: 'paleta', titulo: 'Apariencia',                   desc: 'El estilo del launcher y el fondo de pantalla.' },
+    { id: 'sonido',         grupo: 'Launcher',       icono: 'volumen',      titulo: 'Sonido',                       desc: 'Volumen, música y efectos del launcher.' },
+    { id: 'notificaciones', grupo: 'Launcher',       icono: 'campana',      titulo: 'Avisos',                       desc: 'Qué avisos querés recibir y cuánto duran.' },
+    { id: 'accesibilidad',  grupo: 'Experiencia',    icono: 'ojo',          titulo: 'Accesibilidad y rendimiento',  desc: 'Menos movimiento, más contraste y un launcher más liviano.' },
+    { id: 'capturas',       grupo: 'Experiencia',    icono: 'camera',       titulo: 'Capturas',                     desc: 'La tecla y la carpeta de tus capturas de pantalla.' },
+    { id: 'datos',          grupo: 'Cuenta y datos', icono: 'disco',        titulo: 'Datos y copias',               desc: 'Tu cuenta, tus carpetas y la copia de seguridad de la configuración.' },
+    { id: 'acerca',         grupo: 'Avanzado',       icono: 'info',         titulo: 'Acerca de',                    desc: 'Versión, atajos de teclado y créditos.' }
   ];
+
+  /* Piezas reutilizables para las opciones nuevas */
+  function cfgSwitch(id, titulo, ayuda, activo) {
+    return `<div class="config-fila-switch"><div class="etiqueta-switch">${titulo}${ayuda ? `<small>${ayuda}</small>` : ''}</div><label class="switch"><input type="checkbox" id="${id}" ${activo ? 'checked' : ''}><span class="pista"></span></label></div>`;
+  }
+  function cfgSelect(id, titulo, ayuda, opciones, valor) {
+    return `<div class="config-fila-switch"><div class="etiqueta-switch">${titulo}${ayuda ? `<small>${ayuda}</small>` : ''}</div><select class="cfg-select" id="${id}">${opciones.map(([v, tx]) => `<option value="${v}" ${String(v) === String(valor) ? 'selected' : ''}>${tx}</option>`).join('')}</select></div>`;
+  }
+  function cfgSubtitulo(texto) { return `<div class="config-subtitulo"><span>${texto}</span></div>`; }
+
+  function vistaInicialConfigurada() {
+    const v = configuracionActual.vistaInicial;
+    if (v === 'ultima') return VISTAS_RECORDABLES.includes(configuracionActual.ultimaVista) ? configuracionActual.ultimaVista : 'inicio';
+    return ['inicio', 'biblioteca', 'tienda', 'logros'].includes(v) ? v : 'inicio';
+  }
+
+  /* Guarda la configuración como mucho una vez por segundo (para cosas que cambian seguido, como "la última sección") */
+  let _temporizadorGuardadoConfig = null;
+  function guardarConfigConRetraso() {
+    clearTimeout(_temporizadorGuardadoConfig);
+    _temporizadorGuardadoConfig = setTimeout(() => { try { guardarConfig(); } catch (e) { /* sin guardado */ } }, 1000);
+  }
+
+  /* Opciones de accesibilidad / rendimiento: son clases en <body> que activan reglas de CSS (ver "config-mejorada-css") */
+  function aplicarOpcionesInterfaz() {
+    const c = configuracionActual, b = document.body;
+    if (!b) return;
+    b.classList.toggle('reducir-animaciones', !!c.reducirAnimaciones);
+    b.classList.toggle('sin-desenfoque', !!c.sinDesenfoque);
+    b.classList.toggle('alto-contraste', !!c.altoContraste);
+    b.classList.toggle('foco-visible', !!c.focoVisible);
+    actualizarVentanaInactiva();
+  }
+  function actualizarVentanaInactiva() {
+    const b = document.body; if (!b) return;
+    const inactiva = configuracionActual.pausarEnSegundoPlano !== false && (document.hidden || !document.hasFocus());
+    b.classList.toggle('ventana-inactiva', inactiva);
+  }
+  window.addEventListener('blur', actualizarVentanaInactiva);
+  window.addEventListener('focus', actualizarVentanaInactiva);
+  document.addEventListener('visibilitychange', actualizarVentanaInactiva);
 
   function renderizarBotonDiseno(diseno) {
     const desbloqueado = disenoDesbloqueado(diseno);
@@ -14526,18 +14753,87 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
     const ajFondo = leerAjustesFondo();
 
     cont.innerHTML = `
-      <div class="config-tabs">
-        ${SECCIONES_CONFIG.map(s => `
-          <button class="config-tab ${seccionConfigActiva === s.id ? 'activa' : ''}" data-seccion="${s.id}">
-            ${icono(s.icono, 'sm')}${s.titulo}
-          </button>
+      <aside class="config-tabs" role="tablist" aria-label="Secciones de configuración">
+        <div class="config-buscar">${icono('search', 'sm')}<input type="search" id="config-buscador" placeholder="Buscar en configuración…" autocomplete="off" spellcheck="false"></div>
+        ${['Launcher', 'Experiencia', 'Cuenta y datos', 'Avanzado'].map(g => `
+          <div class="config-grupo">${g}</div>
+          ${SECCIONES_CONFIG.filter(s => s.grupo === g).map(s => `
+            <button class="config-tab ${seccionConfigActiva === s.id ? 'activa' : ''}" data-seccion="${s.id}" role="tab">
+              <span class="config-tab-ico">${icono(s.icono, 'sm')}</span><span class="config-tab-txt">${s.titulo}</span>
+            </button>`).join('')}
         `).join('')}
+      </aside>
+      <div class="config-sin-resultados" id="config-sin-resultados" hidden>${icono('search', 'sm')}<b>Sin resultados</b><span>Probá con otra palabra, por ejemplo: sonido, música, fondo, avisos.</span></div>
+
+      <!-- ===== SECCIÓN: GENERAL ===== -->
+      <div class="config-seccion ${seccionConfigActiva === 'general' ? 'activa' : ''}" id="seccion-general">
+        ${cfgSubtitulo('Al abrir el launcher')}
+        <div class="config-bloque" data-kw="inicio arranque pestaña sección empezar">
+          <h3>Sección inicial</h3>
+          <p class="config-descripcion">Con qué pestaña querés que se abra el launcher cada vez que lo prendés.</p>
+          ${cfgSelect('sel-vista-inicial', 'Abrir en', 'Podés elegir la última que usaste y retoma donde quedaste.', [['inicio', 'Inicio'], ['biblioteca', 'Biblioteca'], ['tienda', 'Tienda'], ['logros', 'Logros'], ['ultima', 'La última que usé']], cfg.vistaInicial)}
+        </div>
+        ${cfgSubtitulo('Biblioteca y partidas')}
+        <div class="config-bloque" data-kw="biblioteca orden ordenar juegos lista">
+          <h3>Orden de la biblioteca</h3>
+          <p class="config-descripcion">Cómo se ordenan tus juegos al entrar a la Biblioteca. Igual podés cambiarlo ahí en cualquier momento.</p>
+          ${cfgSelect('sel-orden-inicial', 'Ordenar por', '', [['reciente', 'Último jugado'], ['nombre', 'Nombre'], ['horas', 'Horas jugadas']], cfg.ordenBibliotecaInicial)}
+        </div>
+        <div class="config-bloque" data-kw="resumen partida cerrar juego logros horas">
+          <h3>Al cerrar un juego</h3>
+          <p class="config-descripcion">Lo que pasa cuando terminás de jugar. Tus horas y logros se guardan igual, con o sin resumen.</p>
+          ${cfgSwitch('sw-resumen-partida', 'Mostrar el resumen de la partida', 'Tiempo jugado, logros nuevos y XP ganada.', cfg.mostrarResumenPartida !== false)}
+        </div>
+      </div>
+
+      <!-- ===== SECCIÓN: AVISOS ===== -->
+      <div class="config-seccion ${seccionConfigActiva === 'notificaciones' ? 'activa' : ''}" id="seccion-notificaciones">
+        ${cfgSubtitulo('Mensajes de amigos')}
+        <div class="config-bloque" data-kw="mensajes amigos chat aviso notificación">
+          <h3>Aviso de mensaje nuevo</h3>
+          <p class="config-descripcion">El cartelito que aparece cuando un amigo te escribe. En estado "Ausente" nunca te llegan avisos.</p>
+          ${cfgSwitch('sw-avisos-mensajes', 'Mostrar el aviso en pantalla', 'Si lo apagás, igual verás el puntito en el botón Chats.', cfg.avisosMensajes !== false)}
+          ${cfgSelect('sel-duracion-aviso', 'Cuánto dura el aviso', '', [[3, '3 segundos'], [5, '5 segundos'], [8, '8 segundos'], [12, '12 segundos']], [3, 5, 8, 12].includes(Number(cfg.duracionAvisoMensaje)) ? Number(cfg.duracionAvisoMensaje) : 5)}
+          <div class="config-fila" style="margin-top:14px;"><button class="btn-outline" id="btn-probar-aviso-config">${icono('play', 'sm')}Probar el aviso</button></div>
+        </div>
+        ${cfgSubtitulo('Fuera del launcher')}
+        <div class="config-bloque" data-kw="escritorio sistema segundo plano minimizado windows">
+          <h3>Avisos del sistema</h3>
+          <p class="config-descripcion">Lo que ves cuando el launcher no está al frente (por ejemplo, mientras jugás).</p>
+          ${cfgSwitch('sw-avisos-escritorio', 'Avisar también en el escritorio', 'Un aviso de Windows cuando te escribe un amigo y el launcher no tiene el foco.', cfg.avisosEscritorio !== false)}
+        </div>
+        <p class="config-nota-pie">Los sonidos de los avisos se ajustan en <b>Sonido → Sonido de mensajes</b>.</p>
+      </div>
+
+      <!-- ===== SECCIÓN: ACCESIBILIDAD Y RENDIMIENTO ===== -->
+      <div class="config-seccion ${seccionConfigActiva === 'accesibilidad' ? 'activa' : ''}" id="seccion-accesibilidad">
+        ${cfgSubtitulo('Movimiento')}
+        <div class="config-bloque" data-kw="animaciones movimiento reducir pausar segundo plano batería">
+          <h3>Animaciones</h3>
+          <p class="config-descripcion">Los estilos del launcher tienen cosas que se mueven (brasas, olas, brillos). Acá las controlás.</p>
+          ${cfgSwitch('sw-reducir-animaciones', 'Reducir animaciones', 'Casi todo queda quieto. Ideal si te marea el movimiento.', cfg.reducirAnimaciones)}
+          ${cfgSwitch('sw-pausar-segundo-plano', 'Pausar el movimiento cuando la ventana no está al frente', 'Ahorra procesador y batería mientras jugás. Recomendado.', cfg.pausarEnSegundoPlano !== false)}
+        </div>
+        ${cfgSubtitulo('Rendimiento')}
+        <div class="config-bloque" data-kw="rendimiento desenfoque vidrio blur lento fps">
+          <h3>Efectos visuales</h3>
+          <p class="config-descripcion">Si el launcher va lento en tu compu, apagar esto suele ayudar.</p>
+          ${cfgSwitch('sw-sin-desenfoque', 'Quitar el desenfoque de vidrio', 'Los paneles translúcidos pasan a ser más sólidos y livianos.', cfg.sinDesenfoque)}
+        </div>
+        ${cfgSubtitulo('Lectura y teclado')}
+        <div class="config-bloque" data-kw="contraste texto teclado foco accesibilidad leer">
+          <h3>Visibilidad</h3>
+          <p class="config-descripcion">Para leer mejor y moverte con el teclado.</p>
+          ${cfgSwitch('sw-alto-contraste', 'Alto contraste', 'Textos más claros y bordes más marcados.', cfg.altoContraste)}
+          ${cfgSwitch('sw-foco-visible', 'Resaltar lo seleccionado con el teclado', 'Un contorno grueso en el botón o campo donde estás parado al usar Tab.', cfg.focoVisible)}
+        </div>
       </div>
 
       <!-- ===== SECCIÓN: SONIDO ===== -->
       <div class="config-seccion ${seccionConfigActiva === 'sonido' ? 'activa' : ''}" id="seccion-sonido">
 
-        <div class="config-bloque">
+        ${cfgSubtitulo('Volumen general')}
+        <div class="config-bloque" data-kw="sonido silenciar maestro">
           <h3>Sonido general</h3>
           <p class="config-descripcion">Apagá esto para silenciar todos los sonidos del launcher de una.</p>
           <div class="config-fila-switch">
@@ -14552,6 +14848,16 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           </div>
         </div>
 
+        <div class="config-bloque" data-kw="volumen general sonidos barra icono parlante">
+          <h3>Volumen general de los sonidos</h3>
+          <p class="config-descripcion">Sube o baja todos los efectos del launcher a la vez; se combina con el volumen propio de cada sonido. Es la misma barra del ícono de volumen de la barra de título.</p>
+          <div class="config-fila">
+            ${icono('volumen', 'sm')}
+            <input type="range" id="config-volumen-sonidos" min="0" max="100" value="${cfg.volumenSonidos ?? 100}">
+            <span class="valor" id="config-volumen-sonidos-valor">${cfg.volumenSonidos ?? 100}%</span>
+          </div>
+        </div>
+        ${cfgSubtitulo('Efectos de sonido')}
         <div class="config-bloque">
           <h3>Sonido de encendido</h3>
           <p class="config-descripcion">El jingle que suena cuando el launcher termina de abrirse.</p>
@@ -14616,6 +14922,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
             <button class="btn-probar-sonido" data-probar="mensaje">${icono('play', 'sm')}Probar</button>
           </div>
         </div>
+        ${cfgSubtitulo('Música')}
         <div class="config-bloque">
           <h3>Música del estilo</h3>
           <p class="config-descripcion">Cada estilo del launcher trae su propia música. Suena sólo mientras el launcher está al frente, así no pisa el audio de un juego.</p>
@@ -14633,6 +14940,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           </div>
         </div>
 
+        ${cfgSubtitulo('Personalización')}
         <div class="config-bloque">
           <h3>Sonidos personalizados</h3>
           <p class="config-descripcion">Elegí vos qué música y qué sonido al cambiar de sección querés, sin importar el estilo que tengas puesto. Viene apagado: mientras esté apagado, cada estilo usa los suyos.</p>
@@ -14668,6 +14976,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
 
       <!-- ===== SECCIÓN: DISEÑO ===== -->
       <div class="config-seccion ${seccionConfigActiva === 'diseno' ? 'activa' : ''}" id="seccion-diseno">
+        ${cfgSubtitulo('Estilo')}
         <div class="config-bloque">
           <h3>${icono('disenoPaleta', 'sm')}Diseño del launcher</h3>
           <p class="config-descripcion">Cambiá el look de toda la app. "PC" y "Blanco" están disponibles desde el arranque; el resto se desbloquea subiendo de rango, y "Pokémon Z Dorado" completando las maestrías de Pokémon Z.</p>
@@ -14685,6 +14994,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           ` : ''}
         </div>
 
+        ${cfgSubtitulo('Fondo')}
         <div class="config-bloque">
           <h3>${icono('disenoPaleta', 'sm')}Fondo del estilo</h3>
           <p class="config-descripcion">Ajustá la imagen de fondo del estilo que tengas puesto. Vale para todos los estilos.</p>
@@ -14715,6 +15025,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
 
       <!-- ===== SECCIÓN: CAPTURAS ===== -->
       <div class="config-seccion ${seccionConfigActiva === 'capturas' ? 'activa' : ''}" id="seccion-capturas">
+        ${cfgSubtitulo('Atajo')}
         <div class="config-bloque">
           <h3>Tecla de captura</h3>
           <p class="config-descripcion">Con un juego abierto, apretá esta tecla para sacar una captura de la ventana del juego (solo el juego, sin el resto de la pantalla). Funciona aunque el launcher esté en segundo plano.</p>
@@ -14725,6 +15036,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           </div>
           <p class="config-descripcion" id="cap-msg" style="margin-top:10px;"></p>
         </div>
+        ${cfgSubtitulo('Archivos')}
         <div class="config-bloque">
           <h3>Tus capturas</h3>
           <p class="config-descripcion">Se guardan en tu cuenta, en este equipo. Las ves en la pestaña Capturas (ahí también les podés cambiar el nombre), en "Capturas recientes" de cada juego en tu Biblioteca, y podés enviarlas a tus amigos desde el chat (solo capturas, no otros archivos).</p>
@@ -14734,12 +15046,14 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
 
       <!-- ===== SECCIÓN: DATOS ===== -->
       <div class="config-seccion ${seccionConfigActiva === 'datos' ? 'activa' : ''}" id="seccion-datos">
+        ${cfgSubtitulo('Cuenta')}
         <div class="config-bloque">
           <h3>Cuenta</h3>
           <p class="config-descripcion">${(window.amigosAPI && window.amigosAPI.obtenerUsuarioActual && window.amigosAPI.obtenerUsuarioActual()) ? 'Sesión iniciada como <b>' + window.amigosAPI.obtenerUsuarioActual().nombreUsuario + '</b>. Cada cuenta tiene su propio progreso.' : 'No hay sesión iniciada.'}</p>
           <button id="btn-cerrar-sesion-config" class="btn-outline">${icono('x', 'sm')}Cerrar sesión</button>
         </div>
 
+        ${cfgSubtitulo('Tus archivos')}
         <div class="config-bloque">
           <h3>Carpeta de datos</h3>
           <p class="config-descripcion">Ahí se guardan tu biblioteca y los juegos que descargás desde la Tienda.</p>
@@ -14747,6 +15061,20 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           <button id="btn-abrir-carpeta" class="btn-outline">${icono('info', 'sm')}Abrir carpeta</button>
         </div>
 
+        ${cfgSubtitulo('Copia de seguridad de la configuración')}
+        <div class="config-bloque" data-kw="exportar importar copia respaldo backup restablecer configuración ajustes">
+          <h3>Exportar, importar y restablecer</h3>
+          <p class="config-descripcion">Guardá tus ajustes (sonido, avisos, accesibilidad, orden de la biblioteca, estilo y fondo) en un archivo para pasarlos a otra compu, o volvé todo a como venía de fábrica. No toca tu biblioteca ni tus logros.</p>
+          <div class="config-acciones">
+            <button class="btn-outline" id="btn-cfg-exportar">${icono('bajar', 'sm')}Exportar configuración</button>
+            <button class="btn-outline" id="btn-cfg-importar">${icono('subir', 'sm')}Importar configuración</button>
+            <button class="btn-outline peligro" id="btn-cfg-restablecer">${icono('reiniciar', 'sm')}Restablecer ajustes</button>
+          </div>
+          <input type="file" id="archivo-cfg-importar" accept="application/json,.json" hidden>
+          <p class="config-descripcion" id="cfg-copia-msg" style="margin:12px 0 0;"></p>
+        </div>
+
+        ${cfgSubtitulo('Zona delicada')}
         <div class="config-bloque">
           <h3>Restablecer biblioteca</h3>
           <p class="config-descripcion">Borra todos los juegos instalados, horas y logros guardados. Esta acción no se puede deshacer.</p>
@@ -14754,54 +15082,9 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
         </div>
       </div>
 
-      <!-- ===== SECCIÓN: DESARROLLO ===== -->
-      <div class="config-seccion ${seccionConfigActiva === 'desarrollo' ? 'activa' : ''}" id="seccion-desarrollo">
-        <div class="config-bloque">
-          <h3>Desbloquear todos los estilos</h3>
-          <p class="config-descripcion">Deja disponibles al instante todos los estilos del launcher y los temas de perfil, incluidos los de recompensa (platinos y maestrías). Es solo una prueba en tu pantalla: no platina ni completa nada. Volvé a tocarlo para bloquearlos otra vez.</p>
-          <button id="btn-dev-estilos" class="btn-outline" style="background: rgba(244,180,0,0.1); border-color: var(--accent-gold); color: var(--accent-gold);">${icono('disenoPaleta', 'sm')}${estilosDevActivos() ? 'Volver a bloquear los estilos' : 'Desbloquear todos los estilos'}</button>
-        </div>
-        <div class="config-bloque">
-          <h3>Desbloquear todas las recompensas de platino</h3>
-          <p class="config-descripcion">Deja disponibles al instante los avatares, marcos, banners y estilos que se ganan platinando cada juego (Añil, Z, Ópalo, Iberia, Titán, Africanvs, Shattered, Realidea, Gadir, Bizarre, Heads and Tails, Reborn y El Eslabón Perdido). Es solo una prueba: no platina ningún juego ni guarda recompensas reales. Volvé a tocarlo para dejarlo como estaba.</p>
-          <button id="btn-dev-platinos" class="btn-outline" style="background: rgba(180,108,240,0.1); border-color: var(--horas-morado); color: var(--horas-morado);">${icono('trophy', 'sm')}${almacenCuenta._devPlatinos() ? 'Volver a bloquear las recompensas de platino' : 'Desbloquear recompensas de platino'}</button>
-        </div>
-        <div class="config-bloque">
-          <h3>Obtener 60.000 XP (rango Leyenda)</h3>
-          <p class="config-descripcion">Te da el máximo de experiencia posible al instante, sin depender de tus juegos instalados. Alcanzás el rango Leyenda y desbloqueás todos los temas, marcos, banners y estilos.</p>
-          <button id="btn-desbloquear-todo" class="btn-outline" style="background: rgba(76, 175, 80, 0.1); border-color: #4CAF50; color: #4CAF50;">${icono('star', 'sm')}Obtener 60.000 XP</button>
-        </div>
-        <div class="config-bloque">
-          <h3>Probar rangos</h3>
-          <p class="config-descripcion">Elegí el rango en el que querés estar y ponelo al instante (sin animación), o tocá "Subir de rango" para pasar al siguiente y ver la animación con el resumen de lo que desbloqueás. Esto pisa tu XP real mientras esté activo.</p>
-          <div class="dev-rango-fila">
-            <select id="dev-rango-select">
-              ${RANGOS_PERFIL.map((r, i) => `<option value="${i}"${i === calcularRangoUsuario(calcularXPTotal()).indice ? ' selected' : ''}>${r.nombre} · ${r.xpMin.toLocaleString('es-AR')} XP</option>`).join('')}
-            </select>
-            <button id="btn-dev-poner-rango" class="btn-outline">${icono('check', 'sm')}Ponerme en este rango</button>
-            <button id="btn-dev-subir-rango" class="btn-outline" style="background: rgba(244,180,0,0.1); border-color: var(--accent-gold); color: var(--accent-gold);">${icono('star', 'sm')}Subir de rango</button>
-            <button id="btn-dev-ver-animacion" class="btn-outline">${icono('trophy', 'sm')}Ver animación del rango elegido</button>
-            <button id="btn-dev-xp-real" class="btn-outline">${icono('x', 'sm')}Volver a mi XP real</button>
-          </div>
-          <p class="dev-rango-estado" id="dev-rango-estado"></p>
-        </div>
-        <div class="config-bloque">
-          <h3>Probar aviso de logro</h3>
-          <p class="config-descripcion">Muestra en la esquina de la pantalla un logro de ejemplo, con el diseño que tengas activo, para ver cómo se ve el aviso cuando desbloqueás uno. No desbloquea nada de verdad.</p>
-          <button id="btn-dev-probar-logro" class="btn-outline" style="background: rgba(244,180,0,0.1); border-color: var(--accent-gold); color: var(--accent-gold);">${icono('trophy', 'sm')}Ver un logro de ejemplo</button>
-        </div>
-        <div class="config-bloque">
-          <h3>Probar aviso de mensaje</h3>
-          <p class="config-descripcion">Muestra el aviso que te llega cuando un amigo te escribe, con un mensaje de ejemplo. No manda nada de verdad y se muestra aunque estés en "Ausente". Con el botón de 5 segundos podés cambiarte a otra ventana y ver la notificación de Windows.</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button id="btn-dev-probar-mensaje" class="btn-outline" style="background: rgba(0,200,255,0.08); border-color: var(--accent-cyan); color: var(--accent-cyan);">${icono('message', 'sm')}Ver un aviso de mensaje</button>
-            <button id="btn-dev-probar-mensaje-5s" class="btn-outline">Probar en 5 segundos</button>
-          </div>
-        </div>
-      </div>
-
       <!-- ===== SECCIÓN: ACERCA DE ===== -->
       <div class="config-seccion ${seccionConfigActiva === 'acerca' ? 'activa' : ''}" id="seccion-acerca">
+        ${cfgSubtitulo('El launcher')}
         <div class="config-bloque">
           <h3>Pokémon Launcher</h3>
           <p class="config-descripcion">Versión 1.0.0 — tu pokédex de juegos.</p>
@@ -14813,11 +15096,149 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
             ${icono('info', 'sm')}Este launcher es un proyecto de fans. No está afiliado a Nintendo ni a The Pokémon Company.
           </p>
         </div>
+        ${cfgSubtitulo('Atajos de teclado')}
+        <div class="config-bloque" data-kw="atajos teclado teclas">
+          <h3>${icono('teclado', 'sm')}Atajos</h3>
+          <p class="config-descripcion">Lo que podés hacer sin tocar el mouse.</p>
+          <div class="info-lista">
+            <div><span>Sacar una captura (con un juego abierto)</span><strong>${escaparHTML(capTeclaLegible(cfg.teclaCaptura))}</strong></div>
+            <div><span>Cerrar paneles y ventanas emergentes</span><strong>Esc</strong></div>
+            <div><span>Moverte entre botones y campos</span><strong>Tab</strong></div>
+          </div>
+        </div>
+        ${cfgSubtitulo('Tu equipo')}
+        <div class="config-bloque" data-kw="sistema equipo electron chromium plataforma versión">
+          <h3>Información del sistema</h3>
+          <p class="config-descripcion">Por si tenés que contar qué usás cuando reportás un problema.</p>
+          <div class="info-lista">
+            <div><span>Sistema</span><strong>${escaparHTML((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '—')}</strong></div>
+            <div><span>Motor (Chromium)</span><strong>${escaparHTML(((navigator.userAgent.match(/Chrome\/([\d.]+)/) || [])[1]) || '—')}</strong></div>
+            <div><span>Idioma</span><strong>${escaparHTML(navigator.language || '—')}</strong></div>
+            <div><span>Pantalla</span><strong>${window.screen.width}×${window.screen.height}</strong></div>
+          </div>
+        </div>
       </div>
     `;
 
     conectarEventosConfiguracion();
     conectarEventosCapturasConfig();
+    decorarConfiguracion();
+    conectarEventosConfigExtra();
+  }
+
+  /* Cabecera de cada sección (ícono + título + bajada) y rangos pintados */
+  function decorarConfiguracion() {
+    SECCIONES_CONFIG.forEach(s => {
+      const sec = document.getElementById('seccion-' + s.id);
+      if (!sec || sec.querySelector('.config-cabecera')) return;
+      sec.insertAdjacentHTML('afterbegin', `<header class="config-cabecera"><span class="config-cab-ico">${icono(s.icono)}</span><div><h2>${s.titulo}</h2><p>${s.desc}</p></div></header>`);
+    });
+    pintarRangosConfig();
+  }
+  function pintarRangosConfig() {
+    document.querySelectorAll('#configuracion-contenido input[type="range"]').forEach(r => {
+      const mn = Number(r.min || 0), mx = Number(r.max || 100);
+      r.style.setProperty('--p', (((Number(r.value) - mn) / (mx - mn)) * 100) + '%');
+    });
+  }
+
+  function conectarEventosConfigExtra() {
+    const cont = document.getElementById('configuracion-contenido');
+    const aplicar = () => { guardarConfig(); aplicarOpcionesInterfaz(); };
+    const interruptor = (id, clave) => { const el = document.getElementById(id); if (el) el.onchange = () => { configuracionActual[clave] = el.checked; aplicar(); }; };
+    const lista = (id, clave, convertir) => { const el = document.getElementById(id); if (el) el.onchange = () => { configuracionActual[clave] = convertir ? convertir(el.value) : el.value; aplicar(); }; };
+
+    // General
+    lista('sel-vista-inicial', 'vistaInicial');
+    lista('sel-orden-inicial', 'ordenBibliotecaInicial');
+    interruptor('sw-resumen-partida', 'mostrarResumenPartida');
+    // Avisos
+    interruptor('sw-avisos-mensajes', 'avisosMensajes');
+    interruptor('sw-avisos-escritorio', 'avisosEscritorio');
+    lista('sel-duracion-aviso', 'duracionAvisoMensaje', Number);
+    const pa = document.getElementById('btn-probar-aviso-config');
+    if (pa) pa.onclick = () => { try { presProbarMensaje(); } catch (e) { /* sin amigos todavía */ } };
+    // Accesibilidad y rendimiento
+    interruptor('sw-reducir-animaciones', 'reducirAnimaciones');
+    interruptor('sw-pausar-segundo-plano', 'pausarEnSegundoPlano');
+    interruptor('sw-sin-desenfoque', 'sinDesenfoque');
+    interruptor('sw-alto-contraste', 'altoContraste');
+    interruptor('sw-foco-visible', 'focoVisible');
+
+    // Volumen general de los sonidos (la misma barra del ícono de volumen)
+    const vg = document.getElementById('config-volumen-sonidos'), vgv = document.getElementById('config-volumen-sonidos-valor');
+    if (vg) {
+      vg.oninput = () => { configuracionActual.volumenSonidos = Number(vg.value); if (vgv) vgv.textContent = vg.value + '%'; };
+      vg.onchange = () => { guardarConfig(); try { reproducirSonido('navegacion', true); } catch (e) { /* sin sonido */ } };
+    }
+    // Los rangos se pintan hasta donde están
+    cont.addEventListener('input', e => { if (e.target.matches && e.target.matches('input[type="range"]')) pintarRangosConfig(); });
+
+    // Copia de seguridad de la configuración
+    const msg = (txt, ok) => { const m = document.getElementById('cfg-copia-msg'); if (m) { m.textContent = txt; m.style.color = ok ? 'var(--accent-cyan)' : '#ff8a80'; } };
+    const be = document.getElementById('btn-cfg-exportar');
+    if (be) be.onclick = () => {
+      try {
+        const datos = { launcher: 'Pokémon Launcher', tipo: 'configuracion', version: 1, exportadoEl: new Date().toISOString(),
+          configuracion: configuracionActual, estilo: obtenerDisenoActivo().id, fondo: leerAjustesFondo() };
+        const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'pokemon-launcher-configuracion.json';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        msg('Listo: se generó pokemon-launcher-configuracion.json.', true);
+      } catch (e) { msg('No se pudo exportar: ' + (e.message || e), false); }
+    };
+    const bi = document.getElementById('btn-cfg-importar'), fi = document.getElementById('archivo-cfg-importar');
+    if (bi && fi) {
+      bi.onclick = () => fi.click();
+      fi.onchange = async () => {
+        const f = fi.files && fi.files[0]; fi.value = '';
+        if (!f) return;
+        try {
+          const d = JSON.parse(await f.text());
+          if (!d || d.tipo !== 'configuracion' || typeof d.configuracion !== 'object') throw new Error('No es un archivo de configuración del launcher.');
+          // sólo se aceptan claves conocidas y del mismo tipo que las de fábrica (así un archivo ajeno no mete cosas raras)
+          let aceptadas = 0;
+          Object.keys(CONFIG_POR_DEFECTO).forEach(k => {
+            if (k in d.configuracion && typeof d.configuracion[k] === typeof CONFIG_POR_DEFECTO[k] && k !== 'teclaCaptura') { configuracionActual[k] = d.configuracion[k]; aceptadas++; }
+          });
+          guardarConfig(); aplicarOpcionesInterfaz();
+          await renderizarConfiguracion();
+          const m2 = document.getElementById('cfg-copia-msg');
+          if (m2) { m2.textContent = 'Configuración importada (' + aceptadas + ' ajustes).'; m2.style.color = 'var(--accent-cyan)'; }
+        } catch (e) { msg('No se pudo importar: ' + (e.message || e), false); }
+      };
+    }
+    const br = document.getElementById('btn-cfg-restablecer');
+    if (br) br.onclick = async () => {
+      if (!confirm('¿Volver todos los ajustes (sonido, avisos, accesibilidad, orden de la biblioteca) a como venían de fábrica? Tu biblioteca, tus logros y tu estilo no se tocan.')) return;
+      const tecla = configuracionActual.teclaCaptura, estado = configuracionActual.estadoPresencia;
+      configuracionActual = { ...CONFIG_POR_DEFECTO, teclaCaptura: tecla, estadoPresencia: estado };
+      ordenBiblioteca = 'reciente';
+      guardarConfig(); aplicarOpcionesInterfaz();
+      await renderizarConfiguracion();
+      const m3 = document.getElementById('cfg-copia-msg');
+      if (m3) { m3.textContent = 'Ajustes restablecidos.'; m3.style.color = 'var(--accent-cyan)'; }
+    };
+
+    // Buscador: filtra las tarjetas de todas las secciones
+    const buscador = document.getElementById('config-buscador');
+    if (buscador) buscador.oninput = () => {
+      const q = buscador.value.trim().toLowerCase();
+      cont.classList.toggle('buscando', !!q);
+      let total = 0;
+      cont.querySelectorAll('.config-seccion').forEach(sec => {
+        let visibles = 0;
+        sec.querySelectorAll('.config-bloque').forEach(b => {
+          const ok = !q || (b.textContent + ' ' + (b.dataset.kw || '')).toLowerCase().includes(q);
+          b.hidden = !ok; if (ok) visibles++;
+        });
+        sec.querySelectorAll('.config-subtitulo').forEach(s => { s.hidden = !!q; });
+        sec.classList.toggle('sin-coincidencias', !!q && visibles === 0);
+        total += visibles;
+      });
+      const sr = document.getElementById('config-sin-resultados'); if (sr) sr.hidden = !(q && total === 0);
+    };
   }
 
   function conectarEventosConfiguracion() {
@@ -21101,6 +21522,10 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
     }
 
     vistaActual = nombre;
+    if (appIniciada && VISTAS_RECORDABLES.includes(nombre) && configuracionActual.ultimaVista !== nombre) {
+      configuracionActual.ultimaVista = nombre;
+      if (configuracionActual.vistaInicial === 'ultima') guardarConfigConRetraso();
+    }
   }
 
   /* ===================== SONIDOS ===================== */
@@ -21188,6 +21613,8 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
     mitadArriba.addEventListener('transitionend', (evento) => {
       if (evento.propertyName === 'transform') {
         splash.remove();
+        // sección con la que querés arrancar (se cambia antes de activar los bips, así no suena)
+        try { const v = vistaInicialConfigurada(); if (v && v !== vistaActual && document.getElementById('vista-' + v)) mostrarVista(v); } catch (e) { /* queda en Inicio */ }
         appIniciada = true; // a partir de acá ya suenan los bips de navegación
         reproducirSonido('encendido');
       }
@@ -22657,7 +23084,7 @@ function presToast(a, quien, txt) {
   t.querySelector('b').textContent = quien; t.querySelector('span').textContent = txt;
   t.onclick = () => { t.remove(); dcAbrir(a.uid); };
   document.body.appendChild(t); requestAnimationFrame(() => t.classList.add('visible'));
-  setTimeout(() => { t.classList.remove('visible'); setTimeout(() => t.remove(), 400); }, 5500);
+  setTimeout(() => { t.classList.remove('visible'); setTimeout(() => t.remove(), 400); }, Math.max(2, Math.min(20, (typeof configuracionActual !== 'undefined' && Number(configuracionActual.duracionAvisoMensaje)) || 5.5)) * 1000);
 }
 
 function presMensajeNuevo(a, d, prueba) {
@@ -22668,8 +23095,9 @@ function presMensajeNuevo(a, d, prueba) {
   const mirando = !prueba && chat && chat.classList.contains('abierto') && dcActivo === a.uid && document.hasFocus();
   if (mirando) return;                                                  // ya estás en esa conversación
   try { document.getElementById('btn-chats').classList.add('nuevo'); } catch (e) {}
+  if (!prueba && typeof configuracionActual !== 'undefined' && configuracionActual.avisosMensajes === false) return;   // avisos apagados en Configuración (queda el puntito en Chats)
   try { reproducirSonido('mensaje'); } catch (e) {}
-  if (!document.hasFocus() && window.api && window.api.notificarMensaje) window.api.notificarMensaje({ titulo: quien, cuerpo: txt, uid: a.uid });
+  if (!document.hasFocus() && (typeof configuracionActual === 'undefined' || configuracionActual.avisosEscritorio !== false) && window.api && window.api.notificarMensaje) window.api.notificarMensaje({ titulo: quien, cuerpo: txt, uid: a.uid });
   else presToast(a, quien, txt);
 }
 
@@ -33120,5 +33548,44 @@ const solSVG = () => `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 1
 </script>
 
 
+<script>
+/* ===== Previsualizaciones de los estilos: cada cajita con su propio dibujo =====
+   Las cajitas de Configuración → Apariencia y de "Tema del perfil" que eran sólo un cuadrado de color ahora muestran una mini escena
+   (hoja para Hoja, roca volcánica con magma para Fuego, olas para Agua, su pokébola para cada Ball...). Son SVG livianos y quietos.
+   Los estilos que ya traían su propia previsualización no se tocan. */
+(function () {
+  'use strict';
+  const DIBUJOS = {
+    'pc': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1f33"/><stop offset="1" stop-color="#08131f"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><g stroke="#5ac8ff" stroke-opacity=".12" stroke-width=".8"><path d="M0 0V72"/><path d="M20 0V72"/><path d="M40 0V72"/><path d="M60 0V72"/><path d="M80 0V72"/><path d="M100 0V72"/><path d="M120 0V72"/><path d="M140 0V72"/><path d="M160 0V72"/><path d="M180 0V72"/><path d="M0 0H200"/><path d="M0 18H200"/><path d="M0 36H200"/><path d="M0 54H200"/></g><rect x="0" y="0" width="200" height="11" fill="#0a1826"/><rect x="0" y="11" width="200" height="1.5" fill="#5ac8ff"/><circle cx="8" cy="5.5" r="3.4" fill="#e3350d"/><circle cx="8" cy="5.5" r="1.3" fill="#fff"/><rect x="16" y="3.5" width="34" height="4" rx="2" fill="#5ac8ff" opacity=".7"/><rect x="0" y="12.5" width="22" height="60" fill="#0a1826"/><rect x="21" y="12.5" width="1.5" height="60" fill="#5ac8ff" opacity=".5"/><rect x="5" y="18" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.95"/><rect x="5" y="32" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.35"/><rect x="5" y="46" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.35"/><rect x="5" y="60" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.35"/><g><rect x="30" y="20" width="48" height="44" rx="3" fill="#102338" stroke="#5ac8ff" stroke-opacity=".55"/><rect x="30" y="20" width="48" height="12" rx="3" fill="#5ac8ff" opacity=".28"/><rect x="35" y="40" width="30" height="3" rx="1.5" fill="#5ac8ff" opacity=".55"/><rect x="35" y="47" width="20" height="3" rx="1.5" fill="#5ac8ff" opacity=".3"/></g><g><rect x="86" y="20" width="48" height="44" rx="3" fill="#102338" stroke="#5ac8ff" stroke-opacity=".55"/><rect x="86" y="20" width="48" height="12" rx="3" fill="#5ac8ff" opacity=".28"/><rect x="91" y="40" width="30" height="3" rx="1.5" fill="#5ac8ff" opacity=".55"/><rect x="91" y="47" width="20" height="3" rx="1.5" fill="#5ac8ff" opacity=".3"/></g><g><rect x="142" y="20" width="48" height="44" rx="3" fill="#102338" stroke="#5ac8ff" stroke-opacity=".55"/><rect x="142" y="20" width="48" height="12" rx="3" fill="#5ac8ff" opacity=".28"/><rect x="147" y="40" width="30" height="3" rx="1.5" fill="#5ac8ff" opacity=".55"/><rect x="147" y="47" width="20" height="3" rx="1.5" fill="#5ac8ff" opacity=".3"/></g></svg>`,
+    'clasico': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1f33"/><stop offset="1" stop-color="#08131f"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><g stroke="#5ac8ff" stroke-opacity=".12" stroke-width=".8"><path d="M0 0V72"/><path d="M20 0V72"/><path d="M40 0V72"/><path d="M60 0V72"/><path d="M80 0V72"/><path d="M100 0V72"/><path d="M120 0V72"/><path d="M140 0V72"/><path d="M160 0V72"/><path d="M180 0V72"/><path d="M0 0H200"/><path d="M0 18H200"/><path d="M0 36H200"/><path d="M0 54H200"/></g><rect x="0" y="0" width="200" height="11" fill="#0a1826"/><rect x="0" y="11" width="200" height="1.5" fill="#5ac8ff"/><circle cx="8" cy="5.5" r="3.4" fill="#e3350d"/><circle cx="8" cy="5.5" r="1.3" fill="#fff"/><rect x="16" y="3.5" width="34" height="4" rx="2" fill="#5ac8ff" opacity=".7"/><rect x="0" y="12.5" width="22" height="60" fill="#0a1826"/><rect x="21" y="12.5" width="1.5" height="60" fill="#5ac8ff" opacity=".5"/><rect x="5" y="18" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.95"/><rect x="5" y="32" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.35"/><rect x="5" y="46" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.35"/><rect x="5" y="60" width="12" height="10" rx="2" fill="#5ac8ff" opacity="0.35"/><g><rect x="30" y="20" width="48" height="44" rx="3" fill="#102338" stroke="#5ac8ff" stroke-opacity=".55"/><rect x="30" y="20" width="48" height="12" rx="3" fill="#5ac8ff" opacity=".28"/><rect x="35" y="40" width="30" height="3" rx="1.5" fill="#5ac8ff" opacity=".55"/><rect x="35" y="47" width="20" height="3" rx="1.5" fill="#5ac8ff" opacity=".3"/></g><g><rect x="86" y="20" width="48" height="44" rx="3" fill="#102338" stroke="#5ac8ff" stroke-opacity=".55"/><rect x="86" y="20" width="48" height="12" rx="3" fill="#5ac8ff" opacity=".28"/><rect x="91" y="40" width="30" height="3" rx="1.5" fill="#5ac8ff" opacity=".55"/><rect x="91" y="47" width="20" height="3" rx="1.5" fill="#5ac8ff" opacity=".3"/></g><g><rect x="142" y="20" width="48" height="44" rx="3" fill="#102338" stroke="#5ac8ff" stroke-opacity=".55"/><rect x="142" y="20" width="48" height="12" rx="3" fill="#5ac8ff" opacity=".28"/><rect x="147" y="40" width="30" height="3" rx="1.5" fill="#5ac8ff" opacity=".55"/><rect x="147" y="47" width="20" height="3" rx="1.5" fill="#5ac8ff" opacity=".3"/></g></svg>`,
+    'oscuro': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#242428"/><stop offset="1" stop-color="#141416"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><circle cx="150" cy="30" r="22" fill="#d9d9e2"/><circle cx="162" cy="24" r="20" fill="url(#f)"/><circle cx="146" cy="30" r="22" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="6"/><path d="M40 11 Q40 16 45 16 Q40 16 40 21 Q40 16 35 16 Q40 16 40 11Z" fill="#e8e8f0" opacity="1"/><path d="M78 40.8 Q78 44 81.2 44 Q78 44 78 47.2 Q78 44 74.8 44 Q78 44 78 40.8Z" fill="#b9b9c6" opacity="1"/><path d="M112 11.4 Q112 14 114.6 14 Q112 14 112 16.6 Q112 14 109.4 14 Q112 14 112 11.4Z" fill="#c9c9d4" opacity="1"/><path d="M24 47.6 Q24 50 26.4 50 Q24 50 24 52.4 Q24 50 21.6 50 Q24 50 24 47.6Z" fill="#9a9aa8" opacity="1"/><path d="M96 58 Q96 60 98 60 Q96 60 96 62 Q96 60 94 60 Q96 60 96 58Z" fill="#b9b9c6" opacity="1"/><circle cx="60" cy="26" r="1.2" fill="#c9c9d4"/><circle cx="14" cy="22" r="1" fill="#9a9aa8"/><circle cx="122" cy="52" r="1.2" fill="#9a9aa8"/><circle cx="184" cy="60" r="1.3" fill="#c9c9d4"/><path d="M0 66 Q40 58 80 64 T160 62 T200 66 V72 H0Z" fill="#101012"/></svg>`,
+    'blanco': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><rect width="200" height="72" fill="#eef2f7"/><rect x="8" y="8" width="64" height="56" rx="5" fill="#fff" stroke="#d5dde8"/><rect x="14" y="14" width="34" height="5" rx="2.5" fill="#0d7fc4"/><rect x="14" y="26" width="50" height="3" rx="1.5" fill="#c5d0de"/><rect x="14" y="33" width="44" height="3" rx="1.5" fill="#d5dde8"/><rect x="14" y="40" width="50" height="3" rx="1.5" fill="#d5dde8"/><rect x="14" y="52" width="22" height="7" rx="3.5" fill="#0d7fc4"/><rect x="82" y="8" width="52" height="26" rx="5" fill="#fff" stroke="#d5dde8"/><circle cx="96" cy="21" r="6" fill="#bfe0f5"/><rect x="106" y="16" width="22" height="3" rx="1.5" fill="#c5d0de"/><rect x="106" y="23" width="16" height="3" rx="1.5" fill="#d5dde8"/><rect x="82" y="38" width="52" height="26" rx="5" fill="#fff" stroke="#d5dde8"/><circle cx="96" cy="51" r="6" fill="#d7eefb"/><rect x="106" y="46" width="22" height="3" rx="1.5" fill="#c5d0de"/><rect x="106" y="53" width="16" height="3" rx="1.5" fill="#d5dde8"/><rect x="144" y="8" width="48" height="56" rx="5" fill="#fff" stroke="#d5dde8"/><circle cx="168" cy="30" r="12" fill="none" stroke="#0d7fc4" stroke-width="4" stroke-dasharray="52 80" transform="rotate(-90 168 30)"/><rect x="154" y="48" width="28" height="3" rx="1.5" fill="#c5d0de"/><rect x="158" y="55" width="20" height="3" rx="1.5" fill="#d5dde8"/></svg>`,
+    'superball': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a2f6b"/><stop offset="1" stop-color="#0b1636"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><g stroke="#7fa8f0" stroke-opacity=".1" stroke-width="1"><path d="M0 18H200M0 54H200"/></g><g transform="translate(150 37) scale(0.8) translate(-150 -38)"><g><clipPath id="sb"><circle cx="150" cy="38" r="44"/></clipPath><g clip-path="url(#sb)"><rect x="106" y="-6" width="88" height="44" fill="#3f7ce0"/><rect x="106" y="38" width="88" height="44" fill="#f4f6fb"/><path d="M 0" /><path d="M106 38 A44 44 0 0 1 124 4 L132 4 Q124 20 126 38Z" fill="#e3350d"/><path d="M194 38 A44 44 0 0 0 176 4 L168 4 Q176 20 174 38Z" fill="#e3350d"/><rect x="106" y="33.16" width="88" height="9.68" fill="#0d1230"/></g><circle cx="150" cy="38" r="44" fill="none" stroke="#0d1230" stroke-width="3.96"/><circle cx="150" cy="38" r="13.2" fill="#0d1230"/><circle cx="150" cy="38" r="7.92" fill="#fff"/><path d="M119.2 13.799999999999997 A44 44 0 0 1 145.6 -2.480000000000004" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="3.08" stroke-linecap="round"/></g></g><g><clipPath id="sb2"><circle cx="34" cy="36" r="16"/></clipPath><g clip-path="url(#sb2)"><rect x="18" y="20" width="32" height="16" fill="#3f7ce0"/><rect x="18" y="36" width="32" height="16" fill="#f4f6fb"/><path d="M18 36 A16 16 0 0 1 24 24 L27 25 Q24 30 25 36Z" fill="#e3350d"/><path d="M50 36 A16 16 0 0 0 44 24 L41 25 Q44 30 43 36Z" fill="#e3350d"/><rect x="18" y="34.24" width="32" height="3.52" fill="#0d1230"/></g><circle cx="34" cy="36" r="16" fill="none" stroke="#0d1230" stroke-width="1.44"/><circle cx="34" cy="36" r="4.8" fill="#0d1230"/><circle cx="34" cy="36" r="2.88" fill="#fff"/><path d="M22.8 27.2 A16 16 0 0 1 32.4 21.28" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="1.12" stroke-linecap="round"/></g><path d="M84 14 Q84 18 88 18 Q84 18 84 22 Q84 18 80 18 Q84 18 84 14Z" fill="#7fa8f0" opacity="1"/><path d="M92 49.4 Q92 52 94.6 52 Q92 52 92 54.6 Q92 52 89.4 52 Q92 52 92 49.4Z" fill="#7fa8f0" opacity="0.7"/></svg>`,
+    'ultraball': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#26262b"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><g transform="translate(150 37) scale(0.8) translate(-150 -38)"><g><clipPath id="ub"><circle cx="150" cy="38" r="44"/></clipPath><g clip-path="url(#ub)"><rect x="106" y="-6" width="88" height="44" fill="#25252b"/><rect x="106" y="38" width="88" height="44" fill="#f2f2ee"/><path d="M104 30 L126 22 L150 36 L174 22 L196 30 L196 16 L174 8 L150 18 L126 8 L104 16Z" fill="#ffcc33"/><rect x="106" y="33.16" width="88" height="9.68" fill="#0d0d10"/></g><circle cx="150" cy="38" r="44" fill="none" stroke="#0d0d10" stroke-width="3.96"/><circle cx="150" cy="38" r="13.2" fill="#0d0d10"/><circle cx="150" cy="38" r="7.92" fill="#ffffff"/><path d="M119.2 13.799999999999997 A44 44 0 0 1 145.6 -2.480000000000004" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="3.08" stroke-linecap="round"/></g></g><g><clipPath id="ub2"><circle cx="34" cy="36" r="16"/></clipPath><g clip-path="url(#ub2)"><rect x="18" y="20" width="32" height="16" fill="#25252b"/><rect x="18" y="36" width="32" height="16" fill="#f2f2ee"/><path d="M18 31 L26 27 L34 32 L42 27 L50 31 L50 24 L42 20 L34 25 L26 20 L18 24Z" fill="#ffcc33"/><rect x="18" y="34.24" width="32" height="3.52" fill="#0d0d10"/></g><circle cx="34" cy="36" r="16" fill="none" stroke="#0d0d10" stroke-width="1.44"/><circle cx="34" cy="36" r="4.8" fill="#0d0d10"/><circle cx="34" cy="36" r="2.88" fill="#ffffff"/><path d="M22.8 27.2 A16 16 0 0 1 32.4 21.28" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="1.12" stroke-linecap="round"/></g><path d="M86 12 Q86 16 90 16 Q86 16 86 20 Q86 16 82 16 Q86 16 86 12Z" fill="#ffe066" opacity="1"/><path d="M94 51.4 Q94 54 96.6 54 Q94 54 94 56.6 Q94 54 91.4 54 Q94 54 94 51.4Z" fill="#ffcc33" opacity="0.7"/><path d="M0 66H200" stroke="#ffcc33" stroke-opacity=".5" stroke-width="1.5"/></svg>`,
+    'masterball': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a0a66"/><stop offset="1" stop-color="#12002a"/></linearGradient><radialGradient id="g" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff00ff" stop-opacity="0.55"/><stop offset="1" stop-color="#ff00ff" stop-opacity="0"/></radialGradient></defs><rect width="200" height="72" fill="url(#f)"/><circle cx="150" cy="38" r="54" fill="url(#g)"/><g transform="translate(150 37) scale(0.8) translate(-150 -38)"><g><clipPath id="mb"><circle cx="150" cy="38" r="44"/></clipPath><g clip-path="url(#mb)"><rect x="106" y="-6" width="88" height="44" fill="#7b2fc7"/><rect x="106" y="38" width="88" height="44" fill="#f4eefb"/><circle cx="124" cy="22" r="9" fill="#ff4fc3"/><circle cx="176" cy="22" r="9" fill="#ff4fc3"/><path d="M120 12 Q150 2 180 12 L180 16 Q150 8 120 16Z" fill="#a455e8"/><rect x="106" y="33.16" width="88" height="9.68" fill="#1a0033"/></g><circle cx="150" cy="38" r="44" fill="none" stroke="#1a0033" stroke-width="3.96"/><circle cx="150" cy="38" r="13.2" fill="#1a0033"/><circle cx="150" cy="38" r="7.92" fill="#ffffff"/><path d="M119.2 13.799999999999997 A44 44 0 0 1 145.6 -2.480000000000004" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="3.08" stroke-linecap="round"/></g></g><g><clipPath id="mb2"><circle cx="34" cy="36" r="16"/></clipPath><g clip-path="url(#mb2)"><rect x="18" y="20" width="32" height="16" fill="#7b2fc7"/><rect x="18" y="36" width="32" height="16" fill="#f4eefb"/><circle cx="25" cy="29" r="3.4" fill="#ff4fc3"/><circle cx="43" cy="29" r="3.4" fill="#ff4fc3"/><rect x="18" y="34.24" width="32" height="3.52" fill="#1a0033"/></g><circle cx="34" cy="36" r="16" fill="none" stroke="#1a0033" stroke-width="1.44"/><circle cx="34" cy="36" r="4.8" fill="#1a0033"/><circle cx="34" cy="36" r="2.88" fill="#ffffff"/><path d="M22.8 27.2 A16 16 0 0 1 32.4 21.28" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="1.12" stroke-linecap="round"/></g><path d="M86 11.5 Q86 16 90.5 16 Q86 16 86 20.5 Q86 16 81.5 16 Q86 16 86 11.5Z" fill="#ff9bf0" opacity="1"/><path d="M96 51 Q96 54 99 54 Q96 54 96 57 Q96 54 93 54 Q96 54 96 51Z" fill="#d68bff" opacity="0.8"/><path d="M66 58 Q66 60 68 60 Q66 60 66 62 Q66 60 64 60 Q66 60 66 58Z" fill="#ff9bf0" opacity="0.7"/></svg>`,
+    'hoja': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d4a2a"/><stop offset="1" stop-color="#08180e"/></linearGradient><linearGradient id="h1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7be89a"/><stop offset="1" stop-color="#2e9a52"/></linearGradient><linearGradient id="h2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5cd486"/><stop offset="1" stop-color="#2a8447"/></linearGradient><linearGradient id="h3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c6f5c0"/><stop offset="1" stop-color="#6cc77d"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><path d="M30 0 L62 0 L36 72 L4 72Z" fill="#ffe9a0" opacity=".07"/><path d="M70 0 L90 0 L72 72 L52 72Z" fill="#ffe9a0" opacity=".05"/><g transform="translate(150 34) rotate(28) scale(0.9)"><path d="M0 -36 C30 -22 34 14 0 38 C-34 14 -30 -22 0 -36Z" fill="url(#h1)"/><path d="M0 -36 C30 -22 34 14 0 38 C-34 14 -30 -22 0 -36Z" fill="none" stroke="#14562c" stroke-width="1.6"/><path d="M0 -34 V44" stroke="#14562c" stroke-width="2" stroke-linecap="round"/><path d="M0 -4 Q14 -12 26 -18" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 -4 Q-14 -12 -26 -18" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 6 Q14 -2 26 -8" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 6 Q-14 -2 -26 -8" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 16 Q14 8 26 2" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 16 Q-14 8 -26 2" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 26 Q14 18 26 12" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 26 Q-14 18 -26 12" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/></g><g transform="translate(100 48) rotate(-38) scale(0.48)"><path d="M0 -36 C30 -22 34 14 0 38 C-34 14 -30 -22 0 -36Z" fill="url(#h2)"/><path d="M0 -36 C30 -22 34 14 0 38 C-34 14 -30 -22 0 -36Z" fill="none" stroke="#14562c" stroke-width="1.6"/><path d="M0 -34 V44" stroke="#14562c" stroke-width="2" stroke-linecap="round"/><path d="M0 -4 Q14 -12 26 -18" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 -4 Q-14 -12 -26 -18" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 6 Q14 -2 26 -8" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 6 Q-14 -2 -26 -8" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 16 Q14 8 26 2" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 16 Q-14 8 -26 2" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 26 Q14 18 26 12" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/><path d="M0 26 Q-14 18 -26 12" fill="none" stroke="#14562c" stroke-width="1" stroke-linecap="round"/></g><g transform="translate(42 24) rotate(52) scale(0.36)"><path d="M0 -36 C30 -22 34 14 0 38 C-34 14 -30 -22 0 -36Z" fill="url(#h3)"/><path d="M0 -36 C30 -22 34 14 0 38 C-34 14 -30 -22 0 -36Z" fill="none" stroke="#1d6b38" stroke-width="1.6"/><path d="M0 -34 V44" stroke="#1d6b38" stroke-width="2" stroke-linecap="round"/><path d="M0 -4 Q14 -12 26 -18" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/><path d="M0 -4 Q-14 -12 -26 -18" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/><path d="M0 6 Q14 -2 26 -8" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/><path d="M0 6 Q-14 -2 -26 -8" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/><path d="M0 16 Q14 8 26 2" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/><path d="M0 16 Q-14 8 -26 2" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/><path d="M0 26 Q14 18 26 12" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/><path d="M0 26 Q-14 18 -26 12" fill="none" stroke="#1d6b38" stroke-width="1" stroke-linecap="round"/></g><path d="M0 72 Q20 60 40 68 T80 66 T120 70 T200 64 V72Z" fill="#0a1d10"/><g fill="#4cd07b" opacity=".7"><path d="M10 72 l3 -14 l3 14z"/><path d="M18 72 l3 -10 l3 10z"/><path d="M178 72 l3 -13 l3 13z"/><path d="M186 72 l3 -9 l3 9z"/></g></svg>`,
+    'fuego': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="g" gradientUnits="objectBoundingBox" cx="0.5" cy="1.2" r="0.9"><stop offset="0" stop-color="#ff6018" stop-opacity="0.55"/><stop offset="1" stop-color="#ff6018" stop-opacity="0"/></radialGradient></defs><rect width="200" height="72" fill="#1a0b07"/><path d="M-2.2 19.8L8.3 2.7L19.0 1.2L23.4 23.0L18.7 27.4L4.5 27.1Z" fill="rgba(0,0,0,0.16)"/><path d="M23.4 23.0L19.0 1.2L24.3 -4.5L44.9 1.7L42.2 24.2L41.9 24.6Z" fill="rgba(255,170,120,0.069)"/><path d="M42.2 24.2L44.9 1.7L54.1 -3.3L69.5 0.5L73.0 3.3L73.7 20.0Z" fill="rgba(255,170,120,0.060)"/><path d="M74.5 21.8L73.7 20.0L73.0 3.3L97.0 -5.9L103.5 -0.1L106.0 17.3L91.3 28.8Z" fill="rgba(255,170,120,0.057)"/><path d="M106.0 17.3L103.5 -0.1L123.8 -3.0L131.2 3.0L126.8 25.6L124.5 26.8Z" fill="rgba(0,0,0,0.23)"/><path d="M126.8 25.6L131.2 3.0L149.9 -1.7L151.0 -1.0L153.0 21.0L142.5 28.3Z" fill="rgba(0,0,0,0.11)"/><path d="M153.0 21.0L151.0 -1.0L175.1 -2.8L180.9 5.3L175.2 27.3L174.2 28.1Z" fill="rgba(0,0,0,0.17)"/><path d="M175.2 27.3L180.9 5.3L199.8 4.8L205.5 30.0L202.9 32.8Z" fill="rgba(0,0,0,0.27)"/><path d="M-0.8 43.1L4.5 27.1L18.7 27.4L22.2 48.9L21.5 49.7L2.0 45.9Z" fill="rgba(255,170,120,0.042)"/><path d="M22.2 48.9L18.7 27.4L23.4 23.0L41.9 24.6L46.0 45.6Z" fill="rgba(255,170,120,0.069)"/><path d="M46.0 45.6L41.9 24.6L42.2 24.2L73.7 20.0L74.5 21.8L65.9 41.9L47.3 46.6Z" fill="rgba(255,170,120,0.038)"/><path d="M65.9 41.9L74.5 21.8L91.3 28.8L97.2 48.1L95.7 50.2L73.0 49.1Z" fill="rgba(0,0,0,0.16)"/><path d="M97.2 48.1L91.3 28.8L106.0 17.3L124.5 26.8L118.4 45.3Z" fill="rgba(0,0,0,0.15)"/><path d="M127.8 57.6L118.4 45.3L124.5 26.8L126.8 25.6L142.5 28.3L149.0 48.6Z" fill="rgba(255,170,120,0.065)"/><path d="M149.0 48.6L142.5 28.3L153.0 21.0L174.2 28.1L170.6 45.5L153.0 50.2Z" fill="rgba(255,170,120,0.044)"/><path d="M170.6 45.5L174.2 28.1L175.2 27.3L202.9 32.8L203.0 45.1L174.3 50.2Z" fill="rgba(255,170,120,0.060)"/><path d="M-0.0 66.1L2.0 45.9L21.5 49.7L18.8 67.7Z" fill="rgba(0,0,0,0.27)"/><path d="M19.7 69.0L18.8 67.7L21.5 49.7L22.2 48.9L46.0 45.6L47.3 46.6L49.3 64.3L45.9 69.6Z" fill="rgba(255,170,120,0.059)"/><path d="M49.3 64.3L47.3 46.6L65.9 41.9L73.0 49.1L70.1 68.3Z" fill="rgba(255,170,120,0.044)"/><path d="M70.1 68.3L73.0 49.1L95.7 50.2L94.3 68.6L94.2 68.7L70.4 68.7Z" fill="rgba(0,0,0,0.30)"/><path d="M94.3 68.6L95.7 50.2L97.2 48.1L118.4 45.3L127.8 57.6L127.1 70.7L121.8 74.2Z" fill="rgba(0,0,0,0.30)"/><path d="M127.1 70.7L127.8 57.6L149.0 48.6L153.0 50.2L154.3 71.1L146.2 81.2Z" fill="rgba(255,170,120,0.040)"/><path d="M154.3 71.1L153.0 50.2L170.6 45.5L174.3 50.2L179.1 65.5L175.7 69.1Z" fill="rgba(0,0,0,0.34)"/><path d="M179.1 65.5L174.3 50.2L203.0 45.1L206.6 53.6L202.6 63.9L195.6 69.5Z" fill="rgba(255,170,120,0.029)"/><path d="M-2.2 19.8L8.3 2.7M8.3 2.7L19.0 1.2M23.4 23.0L19.0 1.2M18.7 27.4L23.4 23.0M4.5 27.1L18.7 27.4M4.5 27.1L-2.2 19.8M19.0 1.2L24.3 -4.5M24.3 -4.5L44.9 1.7M42.2 24.2L44.9 1.7M41.9 24.6L42.2 24.2M23.4 23.0L41.9 24.6M44.9 1.7L54.1 -3.3M54.1 -3.3L69.5 0.5M69.5 0.5L73.0 3.3M73.7 20.0L73.0 3.3M42.2 24.2L73.7 20.0M73.7 20.0L74.5 21.8M73.0 3.3L97.0 -5.9M97.0 -5.9L103.5 -0.1M106.0 17.3L103.5 -0.1M91.3 28.8L106.0 17.3M74.5 21.8L91.3 28.8M103.5 -0.1L123.8 -3.0M123.8 -3.0L131.2 3.0M126.8 25.6L131.2 3.0M124.5 26.8L126.8 25.6M106.0 17.3L124.5 26.8M131.2 3.0L149.9 -1.7M149.9 -1.7L151.0 -1.0M153.0 21.0L151.0 -1.0M142.5 28.3L153.0 21.0M126.8 25.6L142.5 28.3M151.0 -1.0L175.1 -2.8M175.1 -2.8L180.9 5.3M175.2 27.3L180.9 5.3M174.2 28.1L175.2 27.3M153.0 21.0L174.2 28.1M180.9 5.3L199.8 4.8M199.8 4.8L205.5 30.0M205.5 30.0L202.9 32.8M175.2 27.3L202.9 32.8M-0.8 43.1L4.5 27.1M22.2 48.9L18.7 27.4M21.5 49.7L22.2 48.9M2.0 45.9L21.5 49.7M2.0 45.9L-0.8 43.1M46.0 45.6L41.9 24.6M22.2 48.9L46.0 45.6M65.9 41.9L74.5 21.8M47.3 46.6L65.9 41.9M46.0 45.6L47.3 46.6M97.2 48.1L91.3 28.8M95.7 50.2L97.2 48.1M73.0 49.1L95.7 50.2M65.9 41.9L73.0 49.1M118.4 45.3L124.5 26.8M97.2 48.1L118.4 45.3M118.4 45.3L127.8 57.6M149.0 48.6L142.5 28.3M127.8 57.6L149.0 48.6M170.6 45.5L174.2 28.1M153.0 50.2L170.6 45.5M149.0 48.6L153.0 50.2M202.9 32.8L203.0 45.1M174.3 50.2L203.0 45.1M170.6 45.5L174.3 50.2M-0.0 66.1L2.0 45.9M18.8 67.7L21.5 49.7M18.8 67.7L-0.0 66.1M19.7 69.0L18.8 67.7M49.3 64.3L47.3 46.6M49.3 64.3L45.9 69.6M45.9 69.6L19.7 69.0M70.1 68.3L73.0 49.1M70.1 68.3L49.3 64.3M94.3 68.6L95.7 50.2M94.3 68.6L94.2 68.7M94.2 68.7L70.4 68.7M70.4 68.7L70.1 68.3M127.1 70.7L127.8 57.6M127.1 70.7L121.8 74.2M121.8 74.2L94.3 68.6M154.3 71.1L153.0 50.2M154.3 71.1L146.2 81.2M146.2 81.2L127.1 70.7M179.1 65.5L174.3 50.2M179.1 65.5L175.7 69.1M175.7 69.1L154.3 71.1M203.0 45.1L206.6 53.6M206.6 53.6L202.6 63.9M202.6 63.9L195.6 69.5M195.6 69.5L179.1 65.5" fill="none" stroke="#050101" stroke-width="1.6" opacity=".55" stroke-linejoin="round"/><rect y="40" width="200" height="32" fill="url(#g)"/><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M94.3 68.6L94.2 68.7M18.7 27.4L23.4 23.0M73.0 49.1L95.7 50.2M180.9 5.3L199.8 4.8M179.1 65.5L175.7 69.1M42.2 24.2L73.7 20.0M22.2 48.9L46.0 45.6M91.3 28.8L106.0 17.3M142.5 28.3L153.0 21.0M106.0 17.3L124.5 26.8M175.2 27.3L180.9 5.3M70.1 68.3L73.0 49.1M94.3 68.6L95.7 50.2M153.0 50.2L170.6 45.5M174.2 28.1L175.2 27.3M153.0 21.0L174.2 28.1M22.2 48.9L18.7 27.4M21.5 49.7L22.2 48.9M46.0 45.6L47.3 46.6M175.7 69.1L154.3 71.1M97.2 48.1L91.3 28.8M170.6 45.5L174.2 28.1M65.9 41.9L74.5 21.8M126.8 25.6L142.5 28.3M2.0 45.9L21.5 49.7M97.2 48.1L118.4 45.3M95.7 50.2L97.2 48.1M74.5 21.8L91.3 28.8M47.3 46.6L65.9 41.9M118.4 45.3L124.5 26.8M73.7 20.0L74.5 21.8M124.5 26.8L126.8 25.6M154.3 71.1L153.0 50.2" stroke="#8a1a06" stroke-width="6" opacity=".35"/><path d="M94.3 68.6L94.2 68.7M18.7 27.4L23.4 23.0M73.0 49.1L95.7 50.2M180.9 5.3L199.8 4.8M179.1 65.5L175.7 69.1M42.2 24.2L73.7 20.0M22.2 48.9L46.0 45.6M91.3 28.8L106.0 17.3M142.5 28.3L153.0 21.0M106.0 17.3L124.5 26.8M175.2 27.3L180.9 5.3M70.1 68.3L73.0 49.1M94.3 68.6L95.7 50.2M153.0 50.2L170.6 45.5M174.2 28.1L175.2 27.3M153.0 21.0L174.2 28.1M22.2 48.9L18.7 27.4M21.5 49.7L22.2 48.9M46.0 45.6L47.3 46.6M175.7 69.1L154.3 71.1M97.2 48.1L91.3 28.8M170.6 45.5L174.2 28.1M65.9 41.9L74.5 21.8M126.8 25.6L142.5 28.3M2.0 45.9L21.5 49.7M97.2 48.1L118.4 45.3M95.7 50.2L97.2 48.1M74.5 21.8L91.3 28.8M47.3 46.6L65.9 41.9M118.4 45.3L124.5 26.8M73.7 20.0L74.5 21.8M124.5 26.8L126.8 25.6M154.3 71.1L153.0 50.2" stroke="#ff5a1a" stroke-width="2.6"/><path d="M94.3 68.6L94.2 68.7M18.7 27.4L23.4 23.0M73.0 49.1L95.7 50.2M180.9 5.3L199.8 4.8M179.1 65.5L175.7 69.1M42.2 24.2L73.7 20.0M22.2 48.9L46.0 45.6M91.3 28.8L106.0 17.3M142.5 28.3L153.0 21.0M106.0 17.3L124.5 26.8M175.2 27.3L180.9 5.3M70.1 68.3L73.0 49.1M94.3 68.6L95.7 50.2M153.0 50.2L170.6 45.5M174.2 28.1L175.2 27.3M153.0 21.0L174.2 28.1M22.2 48.9L18.7 27.4M21.5 49.7L22.2 48.9M46.0 45.6L47.3 46.6M175.7 69.1L154.3 71.1M97.2 48.1L91.3 28.8M170.6 45.5L174.2 28.1M65.9 41.9L74.5 21.8M126.8 25.6L142.5 28.3M2.0 45.9L21.5 49.7M97.2 48.1L118.4 45.3M95.7 50.2L97.2 48.1M74.5 21.8L91.3 28.8M47.3 46.6L65.9 41.9M118.4 45.3L124.5 26.8M73.7 20.0L74.5 21.8M124.5 26.8L126.8 25.6M154.3 71.1L153.0 50.2" stroke="#ffd27a" stroke-width="1"/></g><circle cx="40" cy="7" r="1.0" fill="#ffcf6b" opacity="0.95"/><circle cx="175" cy="15" r="1.5" fill="#ffcf6b" opacity="0.80"/><circle cx="129" cy="48" r="1.9" fill="#ffcf6b" opacity="0.58"/><circle cx="148" cy="14" r="0.8" fill="#ffcf6b" opacity="0.90"/><circle cx="174" cy="12" r="1.4" fill="#ffcf6b" opacity="0.97"/><circle cx="119" cy="61" r="1.0" fill="#ffcf6b" opacity="0.94"/><circle cx="15" cy="22" r="1.1" fill="#ffcf6b" opacity="0.75"/><circle cx="158" cy="26" r="1.1" fill="#ffcf6b" opacity="0.71"/><circle cx="41" cy="9" r="1.9" fill="#ffcf6b" opacity="0.68"/></svg>`,
+    'agua': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#124a68"/><stop offset="1" stop-color="#07202f"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><circle cx="164" cy="16" r="9" fill="#bff3ff" opacity=".35"/><circle cx="164" cy="16" r="5" fill="#e3fbff" opacity=".7"/><path d="M0 72 L0.0 34.0L5.0 35.4L10.0 36.6L15.0 37.6L20.0 38.3L25.0 38.5L30.0 38.3L35.0 37.6L40.0 36.6L45.0 35.4L50.0 34.0L55.0 32.6L60.0 31.4L65.0 30.4L70.0 29.7L75.0 29.5L80.0 29.7L85.0 30.4L90.0 31.4L95.0 32.6L100.0 34.0L105.0 35.4L110.0 36.6L115.0 37.6L120.0 38.3L125.0 38.5L130.0 38.3L135.0 37.6L140.0 36.6L145.0 35.4L150.0 34.0L155.0 32.6L160.0 31.4L165.0 30.4L170.0 29.7L175.0 29.5L180.0 29.7L185.0 30.4L190.0 31.4L195.0 32.6L200.0 34.0L200 72Z" fill="#22c1dc" opacity="0.35"/><path d="M0 72 L0.0 46.0L5.0 45.8L10.0 45.2L15.0 44.3L20.0 43.1L25.0 41.9L30.0 40.7L35.0 39.6L40.0 38.7L45.0 38.2L50.0 38.0L55.0 38.2L60.0 38.8L65.0 39.7L70.0 40.9L75.0 42.1L80.0 43.3L85.0 44.4L90.0 45.3L95.0 45.8L100.0 46.0L105.0 45.8L110.0 45.2L115.0 44.3L120.0 43.1L125.0 41.9L130.0 40.7L135.0 39.6L140.0 38.7L145.0 38.2L150.0 38.0L155.0 38.2L160.0 38.8L165.0 39.7L170.0 40.9L175.0 42.1L180.0 43.3L185.0 44.4L190.0 45.3L195.0 45.8L200.0 46.0L200 72Z" fill="#22c1dc" opacity="0.5"/><path d="M0 72 L0.0 50.1L5.0 49.0L10.0 48.0L15.0 47.2L20.0 46.6L25.0 46.4L30.0 46.5L35.0 47.0L40.0 47.8L45.0 48.7L50.0 49.9L55.0 51.0L60.0 52.0L65.0 52.8L70.0 53.4L75.0 53.6L80.0 53.5L85.0 53.0L90.0 52.2L95.0 51.3L100.0 50.1L105.0 49.0L110.0 48.0L115.0 47.2L120.0 46.6L125.0 46.4L130.0 46.5L135.0 47.0L140.0 47.8L145.0 48.7L150.0 49.9L155.0 51.0L160.0 52.0L165.0 52.8L170.0 53.4L175.0 53.6L180.0 53.5L185.0 53.0L190.0 52.2L195.0 51.3L200.0 50.1L200 72Z" fill="#169bb7" opacity="0.75"/><path d="M0 72 L0.0 56.1L5.0 56.0L10.0 56.1L15.0 56.6L20.0 57.2L25.0 58.1L30.0 59.0L35.0 59.9L40.0 60.8L45.0 61.4L50.0 61.9L55.0 62.0L60.0 61.9L65.0 61.4L70.0 60.8L75.0 59.9L80.0 59.0L85.0 58.1L90.0 57.2L95.0 56.6L100.0 56.1L105.0 56.0L110.0 56.1L115.0 56.6L120.0 57.2L125.0 58.1L130.0 59.0L135.0 59.9L140.0 60.8L145.0 61.4L150.0 61.9L155.0 62.0L160.0 61.9L165.0 61.4L170.0 60.8L175.0 59.9L180.0 59.0L185.0 58.1L190.0 57.2L195.0 56.6L200.0 56.1L200 72Z" fill="#0e7c97" opacity="0.95"/><circle cx="30" cy="26" r="3.5" fill="none" stroke="#bff3ff" stroke-opacity=".8" stroke-width="1"/><circle cx="40" cy="16" r="2.2" fill="none" stroke="#bff3ff" stroke-opacity=".8" stroke-width="1"/><circle cx="52" cy="30" r="1.6" fill="none" stroke="#bff3ff" stroke-opacity=".8" stroke-width="1"/><circle cx="118" cy="22" r="3" fill="none" stroke="#bff3ff" stroke-opacity=".8" stroke-width="1"/><circle cx="128" cy="10" r="2" fill="none" stroke="#bff3ff" stroke-opacity=".8" stroke-width="1"/><circle cx="180" cy="38" r="2.4" fill="none" stroke="#bff3ff" stroke-opacity=".8" stroke-width="1"/><circle cx="14" cy="38" r="1.8" fill="none" stroke="#bff3ff" stroke-opacity=".8" stroke-width="1"/><path d="M96 8 C102 18 108 22 108 28 A12 12 0 0 1 84 28 C84 22 90 18 96 8Z" fill="#7fe7f5" opacity=".95"/><path d="M90 28 A6 6 0 0 0 96 34" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    'honorball': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eee7e2"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><path d="M0 72 L62 0 H92 L30 72Z" fill="#e3350d"/><path d="M96 72 L158 0 H168 L106 72Z" fill="#e3350d" opacity=".85"/><g transform="translate(150 37) scale(.86) translate(-150 -38)"><g><clipPath id="hb"><circle cx="150" cy="38" r="40"/></clipPath><g clip-path="url(#hb)"><rect x="110" y="-2" width="80" height="40" fill="#ffffff"/><rect x="110" y="38" width="80" height="40" fill="#ffffff"/><rect x="106" y="36" width="88" height="2" fill="#e3350d"/><path d="M150 12 L154 21 L164 22 L156 28 L159 38 L150 32 L141 38 L144 28 L136 22 L146 21Z" fill="#e8b923"/><rect x="110" y="33.6" width="80" height="8.8" fill="#e3350d"/></g><circle cx="150" cy="38" r="40" fill="none" stroke="#e3350d" stroke-width="3.5999999999999996"/><circle cx="150" cy="38" r="12.0" fill="#e3350d"/><circle cx="150" cy="38" r="7.199999999999999" fill="#ffffff"/><path d="M122.0 16.0 A40 40 0 0 1 146.0 1.1999999999999957" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="2.8000000000000003" stroke-linecap="round"/></g></g><path d="M0 66H200" stroke="#e8b923" stroke-width="1.4" opacity=".9"/></svg>`,
+    'cromatico': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14142a"/><stop offset="1" stop-color="#06060c"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><g opacity=".95"><path d="M-10 90 Q100 -30 210 90" fill="none" stroke="#ff3b5c" stroke-width="7" transform="translate(0 -10)"/><path d="M-10 90 Q100 -30 210 90" fill="none" stroke="#ff9d2e" stroke-width="7" transform="translate(0 -16)"/><path d="M-10 90 Q100 -30 210 90" fill="none" stroke="#ffe74c" stroke-width="7" transform="translate(0 -22)"/><path d="M-10 90 Q100 -30 210 90" fill="none" stroke="#4cd964" stroke-width="7" transform="translate(0 -28)"/><path d="M-10 90 Q100 -30 210 90" fill="none" stroke="#35c6ff" stroke-width="7" transform="translate(0 -34)"/><path d="M-10 90 Q100 -30 210 90" fill="none" stroke="#7a6bff" stroke-width="7" transform="translate(0 -40)"/><path d="M-10 90 Q100 -30 210 90" fill="none" stroke="#d65cff" stroke-width="7" transform="translate(0 -46)"/></g><path d="M30 12 Q30 18 36 18 Q30 18 30 24 Q30 18 24 18 Q30 18 30 12Z" fill="#fff" opacity="1"/><path d="M168 7 Q168 12 173 12 Q168 12 168 17 Q168 12 163 12 Q168 12 168 7Z" fill="#fff" opacity="1"/><path d="M176 48.6 Q176 52 179.4 52 Q176 52 176 55.4 Q176 52 172.6 52 Q176 52 176 48.6Z" fill="#fff" opacity="0.9"/><path d="M70 53 Q70 56 73 56 Q70 56 70 59 Q70 56 67 56 Q70 56 70 53Z" fill="#fff" opacity="0.8"/><path d="M120 19.6 Q120 22 122.4 22 Q120 22 120 24.4 Q120 22 117.6 22 Q120 22 120 19.6Z" fill="#fff" opacity="0.8"/><circle cx="100" cy="64" r="9" fill="#0e0e16" stroke="#fff" stroke-opacity=".85" stroke-width="1.5"/><circle cx="100" cy="64" r="3.2" fill="#fff"/></svg>`,
+    'cielo-estrellado': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05051a"/><stop offset="1" stop-color="#150a33"/></linearGradient><radialGradient id="g" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#c9a6ff" stop-opacity="0.75"/><stop offset="0.5" stop-color="#8fa3ff" stop-opacity="0.28"/><stop offset="1" stop-color="#8fa3ff" stop-opacity="0"/></radialGradient><radialGradient id="g2" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="1" stop-color="#c9a6ff" stop-opacity="0"/></radialGradient><linearGradient id="h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><circle cx="124.1" cy="52.4" r="1.2" fill="#fff" opacity="0.42"/><circle cx="93.3" cy="66.1" r="0.5" fill="#fff" opacity="0.94"/><circle cx="24.2" cy="33.9" r="0.6" fill="#fff" opacity="0.63"/><circle cx="22.0" cy="19.0" r="0.6" fill="#fff" opacity="0.64"/><circle cx="37.7" cy="61.0" r="1.0" fill="#fff" opacity="0.50"/><circle cx="158.2" cy="11.4" r="1.2" fill="#fff" opacity="0.67"/><circle cx="27.9" cy="68.1" r="0.5" fill="#fff" opacity="0.53"/><circle cx="44.2" cy="68.8" r="0.6" fill="#fff" opacity="0.57"/><circle cx="190.4" cy="38.7" r="0.6" fill="#fff" opacity="0.51"/><circle cx="191.8" cy="15.4" r="1.0" fill="#fff" opacity="0.58"/><circle cx="72.8" cy="13.3" r="0.6" fill="#fff" opacity="0.56"/><circle cx="67.0" cy="57.6" r="1.2" fill="#fff" opacity="0.40"/><circle cx="134.9" cy="25.0" r="0.8" fill="#fff" opacity="0.61"/><circle cx="62.0" cy="49.4" r="0.6" fill="#fff" opacity="0.69"/><circle cx="140.1" cy="5.9" r="0.5" fill="#fff" opacity="0.97"/><circle cx="72.1" cy="29.5" r="1.2" fill="#fff" opacity="0.87"/><circle cx="73.8" cy="41.3" r="0.5" fill="#fff" opacity="0.67"/><circle cx="140.7" cy="44.4" r="0.6" fill="#fff" opacity="0.47"/><circle cx="50.2" cy="57.7" r="1.0" fill="#fff" opacity="0.61"/><circle cx="71.5" cy="37.7" r="1.0" fill="#fff" opacity="0.46"/><circle cx="148.7" cy="56.2" r="0.8" fill="#fff" opacity="0.42"/><circle cx="187.4" cy="8.2" r="0.8" fill="#fff" opacity="0.71"/><circle cx="73.1" cy="12.1" r="0.8" fill="#fff" opacity="0.95"/><circle cx="108.8" cy="23.2" r="0.8" fill="#fff" opacity="0.58"/><circle cx="158.6" cy="44.6" r="0.8" fill="#fff" opacity="1.00"/><circle cx="33.7" cy="5.3" r="1.2" fill="#fff" opacity="0.72"/><circle cx="81.6" cy="18.1" r="1.2" fill="#fff" opacity="0.61"/><circle cx="51.0" cy="46.3" r="0.6" fill="#fff" opacity="0.43"/><circle cx="181.5" cy="4.2" r="1.0" fill="#fff" opacity="0.60"/><circle cx="42.6" cy="68.7" r="1.2" fill="#fff" opacity="0.97"/><circle cx="125.6" cy="55.6" r="0.5" fill="#fff" opacity="0.50"/><circle cx="75.1" cy="6.0" r="1.0" fill="#fff" opacity="0.58"/><circle cx="90.8" cy="70.0" r="0.6" fill="#fff" opacity="0.99"/><circle cx="90.9" cy="35.2" r="0.8" fill="#fff" opacity="0.69"/><circle cx="59.0" cy="29.5" r="0.6" fill="#fff" opacity="0.47"/><circle cx="163.1" cy="38.2" r="0.6" fill="#fff" opacity="0.78"/><circle cx="99.9" cy="25.0" r="0.5" fill="#fff" opacity="0.70"/><circle cx="103.0" cy="39.3" r="1.2" fill="#fff" opacity="0.62"/><circle cx="156.1" cy="54.7" r="1.2" fill="#fff" opacity="0.80"/><circle cx="150.9" cy="26.7" r="0.8" fill="#fff" opacity="0.90"/><circle cx="53.9" cy="68.7" r="0.8" fill="#fff" opacity="0.97"/><circle cx="68.7" cy="14.1" r="0.5" fill="#fff" opacity="0.68"/><circle cx="153.6" cy="24.2" r="0.8" fill="#fff" opacity="0.68"/><circle cx="162.1" cy="46.0" r="0.8" fill="#fff" opacity="0.61"/><circle cx="128.2" cy="52.2" r="1.0" fill="#fff" opacity="0.61"/><circle cx="167.2" cy="61.2" r="1.0" fill="#fff" opacity="0.99"/><g transform="translate(138 52) rotate(-18)"><ellipse rx="52" ry="12" fill="url(#g)"/><ellipse rx="26" ry="6" fill="url(#g2)"/><circle r="2.6" fill="#fff"/></g><path d="M30 14 L60 24" stroke="url(#h)" stroke-width="1.6" stroke-linecap="round"/><circle cx="60" cy="24" r="2" fill="#fff"/><path d="M24 35.8 Q24 40 28.2 40 Q24 40 24 44.2 Q24 40 19.8 40 Q24 40 24 35.8Z" fill="#e4d1ff" opacity="1"/><path d="M96 8.8 Q96 12 99.2 12 Q96 12 96 15.2 Q96 12 92.8 12 Q96 12 96 8.8Z" fill="#cfd8ff" opacity="1"/><path d="M188 14.4 Q188 18 191.6 18 Q188 18 188 21.6 Q188 18 184.4 18 Q188 18 188 14.4Z" fill="#e4d1ff" opacity="0.9"/></svg>`,
+    'pokemon-z-dorado': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c2010"/><stop offset="1" stop-color="#120b04"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><rect x="3" y="3" width="194" height="66" rx="2" fill="none" stroke="#cfa443" stroke-width="1.6"/><rect x="7" y="7" width="186" height="58" rx="1" fill="none" stroke="#cfa443" stroke-width=".8" opacity=".8"/><g transform="translate(7 7) scale(1 1)" fill="none" stroke="#cfa443" stroke-width="1.2"><path d="M0 14 V3 Q0 0 3 0 H14"/><path d="M5 14 V7 Q5 5 7 5 H14" opacity=".7"/><circle cx="2.4" cy="2.4" r="1.4" fill="#cfa443" stroke="none"/></g><g transform="translate(193 7) scale(-1 1)" fill="none" stroke="#cfa443" stroke-width="1.2"><path d="M0 14 V3 Q0 0 3 0 H14"/><path d="M5 14 V7 Q5 5 7 5 H14" opacity=".7"/><circle cx="2.4" cy="2.4" r="1.4" fill="#cfa443" stroke="none"/></g><g transform="translate(7 65) scale(1 -1)" fill="none" stroke="#cfa443" stroke-width="1.2"><path d="M0 14 V3 Q0 0 3 0 H14"/><path d="M5 14 V7 Q5 5 7 5 H14" opacity=".7"/><circle cx="2.4" cy="2.4" r="1.4" fill="#cfa443" stroke="none"/></g><g transform="translate(193 65) scale(-1 -1)" fill="none" stroke="#cfa443" stroke-width="1.2"><path d="M0 14 V3 Q0 0 3 0 H14"/><path d="M5 14 V7 Q5 5 7 5 H14" opacity=".7"/><circle cx="2.4" cy="2.4" r="1.4" fill="#cfa443" stroke="none"/></g><path d="M100 14 L116 36 L100 58 L84 36Z" fill="none" stroke="#f0d27c" stroke-width="1.6"/><path d="M100 22 L110 36 L100 50 L90 36Z" fill="#cfa443" opacity=".9"/><circle cx="100" cy="36" r="3" fill="#1c1409"/><g stroke="#cfa443" stroke-width="1.4" stroke-linecap="round"><path d="M26 28H72M30 36H72M26 44H66"/><path d="M128 28H174M128 36H170M134 44H174"/></g><path d="M60 60 Q100 52 140 60" fill="none" stroke="#cfa443" stroke-width="1" opacity=".7"/></svg>`,
+    'pokedex-dorada': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="0.5" stop-color="#f1c94f"/><stop offset="1" stop-color="#d9a31c"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><g fill="none" stroke="#7a5000" stroke-opacity=".28" stroke-width="1.2"><polygon points="8.4,18.0 -2.0,24.0 -12.4,18.0 -12.4,6.0 -2.0,0.0 8.4,6.0"/><polygon points="34.4,18.0 24.0,24.0 13.6,18.0 13.6,6.0 24.0,0.0 34.4,6.0"/><polygon points="60.4,18.0 50.0,24.0 39.6,18.0 39.6,6.0 50.0,0.0 60.4,6.0"/><polygon points="86.4,18.0 76.0,24.0 65.6,18.0 65.6,6.0 76.0,0.0 86.4,6.0"/><polygon points="112.4,18.0 102.0,24.0 91.6,18.0 91.6,6.0 102.0,0.0 112.4,6.0"/><polygon points="138.4,18.0 128.0,24.0 117.6,18.0 117.6,6.0 128.0,0.0 138.4,6.0"/><polygon points="164.4,18.0 154.0,24.0 143.6,18.0 143.6,6.0 154.0,0.0 164.4,6.0"/><polygon points="190.4,18.0 180.0,24.0 169.6,18.0 169.6,6.0 180.0,0.0 190.4,6.0"/><polygon points="216.4,18.0 206.0,24.0 195.6,18.0 195.6,6.0 206.0,0.0 216.4,6.0"/><polygon points="21.4,37.0 11.0,43.0 0.6,37.0 0.6,25.0 11.0,19.0 21.4,25.0"/><polygon points="47.4,37.0 37.0,43.0 26.6,37.0 26.6,25.0 37.0,19.0 47.4,25.0"/><polygon points="73.4,37.0 63.0,43.0 52.6,37.0 52.6,25.0 63.0,19.0 73.4,25.0"/><polygon points="99.4,37.0 89.0,43.0 78.6,37.0 78.6,25.0 89.0,19.0 99.4,25.0"/><polygon points="125.4,37.0 115.0,43.0 104.6,37.0 104.6,25.0 115.0,19.0 125.4,25.0"/><polygon points="151.4,37.0 141.0,43.0 130.6,37.0 130.6,25.0 141.0,19.0 151.4,25.0"/><polygon points="177.4,37.0 167.0,43.0 156.6,37.0 156.6,25.0 167.0,19.0 177.4,25.0"/><polygon points="203.4,37.0 193.0,43.0 182.6,37.0 182.6,25.0 193.0,19.0 203.4,25.0"/><polygon points="229.4,37.0 219.0,43.0 208.6,37.0 208.6,25.0 219.0,19.0 229.4,25.0"/><polygon points="8.4,56.0 -2.0,62.0 -12.4,56.0 -12.4,44.0 -2.0,38.0 8.4,44.0"/><polygon points="34.4,56.0 24.0,62.0 13.6,56.0 13.6,44.0 24.0,38.0 34.4,44.0"/><polygon points="60.4,56.0 50.0,62.0 39.6,56.0 39.6,44.0 50.0,38.0 60.4,44.0"/><polygon points="86.4,56.0 76.0,62.0 65.6,56.0 65.6,44.0 76.0,38.0 86.4,44.0"/><polygon points="112.4,56.0 102.0,62.0 91.6,56.0 91.6,44.0 102.0,38.0 112.4,44.0"/><polygon points="138.4,56.0 128.0,62.0 117.6,56.0 117.6,44.0 128.0,38.0 138.4,44.0"/><polygon points="164.4,56.0 154.0,62.0 143.6,56.0 143.6,44.0 154.0,38.0 164.4,44.0"/><polygon points="190.4,56.0 180.0,62.0 169.6,56.0 169.6,44.0 180.0,38.0 190.4,44.0"/><polygon points="216.4,56.0 206.0,62.0 195.6,56.0 195.6,44.0 206.0,38.0 216.4,44.0"/><polygon points="21.4,75.0 11.0,81.0 0.6,75.0 0.6,63.0 11.0,57.0 21.4,63.0"/><polygon points="47.4,75.0 37.0,81.0 26.6,75.0 26.6,63.0 37.0,57.0 47.4,63.0"/><polygon points="73.4,75.0 63.0,81.0 52.6,75.0 52.6,63.0 63.0,57.0 73.4,63.0"/><polygon points="99.4,75.0 89.0,81.0 78.6,75.0 78.6,63.0 89.0,57.0 99.4,63.0"/><polygon points="125.4,75.0 115.0,81.0 104.6,75.0 104.6,63.0 115.0,57.0 125.4,63.0"/><polygon points="151.4,75.0 141.0,81.0 130.6,75.0 130.6,63.0 141.0,57.0 151.4,63.0"/><polygon points="177.4,75.0 167.0,81.0 156.6,75.0 156.6,63.0 167.0,57.0 177.4,63.0"/><polygon points="203.4,75.0 193.0,81.0 182.6,75.0 182.6,63.0 193.0,57.0 203.4,63.0"/><polygon points="229.4,75.0 219.0,81.0 208.6,75.0 208.6,63.0 219.0,57.0 229.4,63.0"/></g><path d="M-10 72 L50 0 H86 L26 72Z" fill="#fff6c2" opacity=".55"/><path d="M100 72 L160 0 H170 L110 72Z" fill="#fff6c2" opacity=".4"/><rect x="0" y="0" width="200" height="72" fill="none"/><path d="M150 12 Q150 20 158 20 Q150 20 150 28 Q150 20 142 20 Q150 20 150 12Z" fill="#fffbe0" opacity="0.95"/><path d="M172 45.4 Q172 50 176.6 50 Q172 50 172 54.6 Q172 50 167.4 50 Q172 50 172 45.4Z" fill="#fffbe0" opacity="0.8"/><path d="M34 18.6 Q34 22 37.4 22 Q34 22 34 25.4 Q34 22 30.6 22 Q34 22 34 18.6Z" fill="#fffbe0" opacity="0.7"/><rect x="0" y="63" width="200" height="9" fill="#b87c00" opacity=".85"/><rect x="0" y="63" width="200" height="1.4" fill="#ffe27a"/></svg>`,
+    'pokedex-plateada': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7fb"/><stop offset="0.5" stop-color="#cfd8e6"/><stop offset="1" stop-color="#aebbd0"/></linearGradient><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4ba8ff" stop-opacity="0"/><stop offset="0.5" stop-color="#4ba8ff" stop-opacity="0.6"/><stop offset="1" stop-color="#4ba8ff" stop-opacity="0"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><g stroke="#2c4f86" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14 H44 L54 24 H92"/><path d="M10 30 H30 L38 38 H70"/><path d="M190 12 H156 L146 22 H112"/><path d="M190 58 H150 L140 48 H108"/><path d="M12 58 H52 L62 50 H96"/></g><g fill="#2c4f86" opacity=".85"><circle cx="10" cy="14" r="2.4"/><circle cx="92" cy="24" r="2.4"/><circle cx="10" cy="30" r="2.4"/><circle cx="70" cy="38" r="2.4"/><circle cx="190" cy="12" r="2.4"/><circle cx="112" cy="22" r="2.4"/><circle cx="190" cy="58" r="2.4"/><circle cx="108" cy="48" r="2.4"/><circle cx="12" cy="58" r="2.4"/><circle cx="96" cy="50" r="2.4"/></g><rect x="78" y="22" width="44" height="28" rx="3" fill="#dbe3ee" stroke="#2c4f86" stroke-width="1.6"/><rect x="86" y="30" width="28" height="12" rx="1.5" fill="#2c4f86" opacity=".9"/><rect x="0" y="34" width="200" height="6" fill="url(#s)"/><rect x="0" y="36.4" width="200" height="1.2" fill="#8fd0ff"/><path d="M170 30.6 Q170 36 175.4 36 Q170 36 170 41.4 Q170 36 164.6 36 Q170 36 170 30.6Z" fill="#fff" opacity="1"/><path d="M30 41 Q30 44 33 44 Q30 44 30 47 Q30 44 27 44 Q30 44 30 41Z" fill="#fff" opacity="0.9"/></svg>`,
+    'iberia-rojigualda': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a1019"/><stop offset="1" stop-color="#14050a"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><path d="M0 8.0 L0 8.0 L5 8.8 L10 9.6 L15 10.3 L20 10.8 L25 11.2 L30 11.5 L35 11.5 L40 11.3 L45 11.0 L50 10.5 L55 9.8 L60 9.1 L65 8.3 L70 7.5 L75 6.7 L80 5.9 L85 5.3 L90 4.9 L95 4.6 L100 4.5 L105 4.6 L110 4.9 L115 5.3 L120 5.9 L125 6.7 L130 7.5 L135 8.3 L140 9.1 L145 9.8 L150 10.5 L155 11.0 L160 11.3 L165 11.5 L170 11.5 L175 11.2 L180 10.8 L185 10.3 L190 9.6 L195 8.8 L200 8.0 L200 24.0 L195 24.8 L190 25.6 L185 26.3 L180 26.8 L175 27.2 L170 27.5 L165 27.5 L160 27.3 L155 27.0 L150 26.5 L145 25.8 L140 25.1 L135 24.3 L130 23.5 L125 22.7 L120 21.9 L115 21.3 L110 20.9 L105 20.6 L100 20.5 L95 20.6 L90 20.9 L85 21.3 L80 21.9 L75 22.7 L70 23.5 L65 24.3 L60 25.1 L55 25.8 L50 26.5 L45 27.0 L40 27.3 L35 27.5 L30 27.5 L25 27.2 L20 26.8 L15 26.3 L10 25.6 L5 24.8 L0 24.0 Z" fill="#c60b1e"/><path d="M0 24.0 L0 24.0 L5 24.8 L10 25.6 L15 26.3 L20 26.8 L25 27.2 L30 27.5 L35 27.5 L40 27.3 L45 27.0 L50 26.5 L55 25.8 L60 25.1 L65 24.3 L70 23.5 L75 22.7 L80 21.9 L85 21.3 L90 20.9 L95 20.6 L100 20.5 L105 20.6 L110 20.9 L115 21.3 L120 21.9 L125 22.7 L130 23.5 L135 24.3 L140 25.1 L145 25.8 L150 26.5 L155 27.0 L160 27.3 L165 27.5 L170 27.5 L175 27.2 L180 26.8 L185 26.3 L190 25.6 L195 24.8 L200 24.0 L200 48.0 L195 48.8 L190 49.6 L185 50.3 L180 50.8 L175 51.2 L170 51.5 L165 51.5 L160 51.3 L155 51.0 L150 50.5 L145 49.8 L140 49.1 L135 48.3 L130 47.5 L125 46.7 L120 45.9 L115 45.3 L110 44.9 L105 44.6 L100 44.5 L95 44.6 L90 44.9 L85 45.3 L80 45.9 L75 46.7 L70 47.5 L65 48.3 L60 49.1 L55 49.8 L50 50.5 L45 51.0 L40 51.3 L35 51.5 L30 51.5 L25 51.2 L20 50.8 L15 50.3 L10 49.6 L5 48.8 L0 48.0 Z" fill="#ffc400"/><path d="M0 48.0 L0 48.0 L5 48.8 L10 49.6 L15 50.3 L20 50.8 L25 51.2 L30 51.5 L35 51.5 L40 51.3 L45 51.0 L50 50.5 L55 49.8 L60 49.1 L65 48.3 L70 47.5 L75 46.7 L80 45.9 L85 45.3 L90 44.9 L95 44.6 L100 44.5 L105 44.6 L110 44.9 L115 45.3 L120 45.9 L125 46.7 L130 47.5 L135 48.3 L140 49.1 L145 49.8 L150 50.5 L155 51.0 L160 51.3 L165 51.5 L170 51.5 L175 51.2 L180 50.8 L185 50.3 L190 49.6 L195 48.8 L200 48.0 L200 64.0 L195 64.8 L190 65.6 L185 66.3 L180 66.8 L175 67.2 L170 67.5 L165 67.5 L160 67.3 L155 67.0 L150 66.5 L145 65.8 L140 65.1 L135 64.3 L130 63.5 L125 62.7 L120 61.9 L115 61.3 L110 60.9 L105 60.6 L100 60.5 L95 60.6 L90 60.9 L85 61.3 L80 61.9 L75 62.7 L70 63.5 L65 64.3 L60 65.1 L55 65.8 L50 66.5 L45 67.0 L40 67.3 L35 67.5 L30 67.5 L25 67.2 L20 66.8 L15 66.3 L10 65.6 L5 64.8 L0 64.0 Z" fill="#c60b1e"/><path d="M0 12 Q50 4 100 12 T200 12" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="3"/><g transform="translate(100 36)"><circle r="13" fill="#c60b1e" stroke="#220a10" stroke-width="2.4"/><path d="M-13 0 A13 13 0 0 0 13 0Z" fill="#fff6d6"/><rect x="-13" y="-2" width="26" height="4" fill="#220a10"/><circle r="4.6" fill="#220a10"/><circle r="2.6" fill="#ffc400"/></g><path d="M26 33.6 Q26 38 30.4 38 Q26 38 26 42.4 Q26 38 21.6 38 Q26 38 26 33.6Z" fill="#fff5b0" opacity="0.9"/><path d="M176 35.6 Q176 40 180.4 40 Q176 40 176 44.4 Q176 40 171.6 40 Q176 40 176 35.6Z" fill="#fff5b0" opacity="0.9"/><rect x="0" y="66" width="200" height="6" fill="#14050a"/><rect x="0" y="66" width="200" height="1.4" fill="#ffc400"/></svg>`,
+    'africanvs-romano': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 72" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#ece2c8"/></linearGradient><linearGradient id="c" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#efe6cf"/><stop offset="0.5" stop-color="#fdfaf0"/><stop offset="1" stop-color="#dccfae"/></linearGradient></defs><rect width="200" height="72" fill="url(#f)"/><rect x="0" y="0" width="200" height="8" fill="#d4a017"/><rect x="0" y="8" width="200" height="1.6" fill="#7a5a08"/><g stroke="#7a5a08" stroke-width="1.2" opacity=".9"><path d="M4 2.4 h6 v3 h-6z" fill="none"/><path d="M16 2.4 h6 v3 h-6z" fill="none"/><path d="M28 2.4 h6 v3 h-6z" fill="none"/><path d="M40 2.4 h6 v3 h-6z" fill="none"/><path d="M52 2.4 h6 v3 h-6z" fill="none"/><path d="M64 2.4 h6 v3 h-6z" fill="none"/><path d="M76 2.4 h6 v3 h-6z" fill="none"/><path d="M88 2.4 h6 v3 h-6z" fill="none"/><path d="M100 2.4 h6 v3 h-6z" fill="none"/><path d="M112 2.4 h6 v3 h-6z" fill="none"/><path d="M124 2.4 h6 v3 h-6z" fill="none"/><path d="M136 2.4 h6 v3 h-6z" fill="none"/><path d="M148 2.4 h6 v3 h-6z" fill="none"/><path d="M160 2.4 h6 v3 h-6z" fill="none"/><path d="M172 2.4 h6 v3 h-6z" fill="none"/><path d="M184 2.4 h6 v3 h-6z" fill="none"/></g><rect x="11" y="10" width="26" height="6" fill="#e8dcc0" stroke="#b9a77a" stroke-width=".8"/><rect x="14" y="16" width="20" height="42" fill="url(#c)"/><rect x="18" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="22" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="26" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="30" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="11" y="58" width="26" height="5" fill="#e8dcc0" stroke="#b9a77a" stroke-width=".8"/><rect x="163" y="10" width="26" height="6" fill="#e8dcc0" stroke="#b9a77a" stroke-width=".8"/><rect x="166" y="16" width="20" height="42" fill="url(#c)"/><rect x="170" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="174" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="178" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="182" y="16" width="1.2" height="42" fill="#c9bfa3" opacity=".7"/><rect x="163" y="58" width="26" height="5" fill="#e8dcc0" stroke="#b9a77a" stroke-width=".8"/><path d="M52 63 V30 A48 48 0 0 1 148 30 V63" fill="none" stroke="#d4a017" stroke-width="2.4"/><path d="M58 63 V32 A42 42 0 0 1 142 32 V63" fill="none" stroke="#b9a77a" stroke-width="1"/><ellipse cx="90.0" cy="44" rx="5.2" ry="2.4" transform="rotate(38 90.0 44)" fill="#d4a017"/><ellipse cx="110.0" cy="44" rx="5.2" ry="2.4" transform="rotate(-38 110.0 44)" fill="#d4a017"/><ellipse cx="86.8" cy="39" rx="5.2" ry="2.4" transform="rotate(46 86.8 39)" fill="#d4a017"/><ellipse cx="113.2" cy="39" rx="5.2" ry="2.4" transform="rotate(-46 113.2 39)" fill="#d4a017"/><ellipse cx="83.6" cy="34" rx="5.2" ry="2.4" transform="rotate(54 83.6 34)" fill="#d4a017"/><ellipse cx="116.4" cy="34" rx="5.2" ry="2.4" transform="rotate(-54 116.4 34)" fill="#d4a017"/><ellipse cx="80.4" cy="29" rx="5.2" ry="2.4" transform="rotate(62 80.4 29)" fill="#d4a017"/><ellipse cx="119.6" cy="29" rx="5.2" ry="2.4" transform="rotate(-62 119.6 29)" fill="#d4a017"/><path d="M100 18 L104 28 L100 36 L96 28Z" fill="#d4a017"/><circle cx="100" cy="46" r="5" fill="#d4a017"/><circle cx="100" cy="46" r="2.2" fill="#faf7f0"/><rect x="0" y="64" width="200" height="8" fill="#e8dcc0"/><rect x="0" y="64" width="200" height="1.4" fill="#d4a017"/></svg>`
+  };
+  const SOLO_DISENO = ["iberia-rojigualda", "africanvs-romano"];   // en el tema del perfil estos dos ya tienen su dibujo
+  const reglas = Object.keys(DIBUJOS).map(id => {
+    const url = 'url("data:image/svg+xml,' + encodeURIComponent(DIBUJOS[id]) + '")';
+    const sel = SOLO_DISENO.includes(id) ? '.btn-tema-perfil[data-diseno="' + id + '"] .tema-preview' : '.btn-tema-perfil[data-diseno="' + id + '"] .tema-preview, .btn-tema-perfil[data-tema="' + id + '"] .tema-preview';
+    return sel + ' { background: ' + url + ' center / cover no-repeat !important; }';
+  });
+  const estilo = document.createElement('style');
+  estilo.id = 'previas-estilos-css';
+  estilo.textContent = reglas.join('\n');
+  document.head.appendChild(estilo);
+})();
+</script>
 </body>
 </html>
