@@ -1,6 +1,6 @@
 {
   "name": "pokemon-launcher",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Launcher de fangames Pokémon con logros, biblioteca y comunidad",
   "main": "main.js",
   "scripts": {
