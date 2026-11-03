@@ -342,7 +342,7 @@ async function obtenerRespaldo(uidEsperado) {
 // ⚠️ PEGÁ ACÁ EL UID DE TU CUENTA "Dexado"
 // (Firebase console → Authentication → Usuarios → columna "UID de usuario" de Dexado).
 // Es lo que te identifica como propietario: solo esa cuenta puede dar/quitar rangos y tener el rango Propietario.
-const UID_PROPIETARIO = 'PEGA_ACA_EL_UID_DE_DEXADO';
+const UID_PROPIETARIO = 'ZmPsyA9OtJfYkAlC58g94ekFSd12';
 
 // Orden = orden en que se muestran en el perfil. `grupo`: dentro de un mismo grupo solo se tiene uno
 // (un donador tiene UN solo tier: al darle otro, reemplaza al anterior).

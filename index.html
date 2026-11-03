@@ -9822,6 +9822,7 @@ body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outlin
       try {
         if (this._seguro()) { window.api.almacenGuardar(k, valor); try { localStorage.removeItem(k); } catch (e) {} }
         else localStorage.setItem(k, valor);
+        marcarTs(clave);
         programarRespaldoNube();
       } catch (e) { console.warn('No se pudo guardar:', e); }
     },
@@ -9831,6 +9832,8 @@ body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outlin
       try {
         if (this._seguro()) window.api.almacenBorrar(k);
         localStorage.removeItem(k);
+        marcarTs(clave);
+        programarRespaldoNube();
       } catch (e) {}
     }
   };
@@ -9842,6 +9845,52 @@ body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outlin
   const CLAVES_SIN_RESPALDO = ['biblioteca', 'progreso-nube', 'progreso-previo-consultado', 'xpBonusDesarrollo', 'xpOverrideDesarrollo'];
   let temporizadorRespaldo = null;
   let restaurandoNube = false;
+
+
+  /* ---------- Sincronización del perfil entre computadoras ----------
+     Cada cambio de perfil guarda su fecha (por equipo). Al combinar con la nube:
+     - Elecciones (avatar, marco, fondo, banner, estilo, etc.): gana la más reciente.
+     - Desbloqueos (platinos) y listas (pokédex, noticias): se juntan, nunca se pierden. */
+  const claveTsLocal = () => 'cuenta-ts:' + uidAlmacen;   // localStorage: es de este equipo, viaja dentro del respaldo
+  function leerTs() { try { return JSON.parse(localStorage.getItem(claveTsLocal())) || {}; } catch (e) { return {}; } }
+  function guardarTs(t) { try { localStorage.setItem(claveTsLocal(), JSON.stringify(t)); } catch (e) {} }
+  function marcarTs(clave) {
+    if (restaurandoNube || !uidAlmacen || CLAVES_SIN_RESPALDO.includes(clave)) return;
+    const t = leerTs(); t[clave] = Date.now(); guardarTs(t);
+  }
+  const CLAVES_LISTA_UNION = ['pokedexCompletasIds', 'estilosDevDesbloqueados', 'noticiasLeidas', 'notifLeidas'];
+  // vL / vR: valor local / de la nube (undefined = no existe, null = borrado en la nube). Devuelve el valor final.
+  function combinarClave(k, vL, vR, tL, tR) {
+    if (vR === undefined) return vL;
+    if (vR === null) return (tL || 0) > (tR || 0) ? vL : null;
+    if (vL === undefined || vL === null) return vR;
+    if (vL === vR) return vL;
+    if (/^platino.+Conseguido$/.test(k)) return (vL === '1' || vR === '1') ? '1' : vL;
+    try {
+      const a = JSON.parse(vL), b = JSON.parse(vR);
+      if (CLAVES_LISTA_UNION.includes(k) && Array.isArray(a) && Array.isArray(b)) {
+        const vistos = new Set(); const out = [];
+        [...a, ...b].forEach(x => { const id = JSON.stringify(x); if (!vistos.has(id)) { vistos.add(id); out.push(x); } });
+        return JSON.stringify(out);
+      }
+      if (k.startsWith('maestrias-') && a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+        return JSON.stringify({ ...b, ...a });
+      }
+    } catch (e) {}
+    return (tR || 0) > (tL || 0) ? vR : vL;   // elecciones: gana la más reciente
+  }
+  let ultimoSync = { ok: null, cuando: null, error: null };
+  function textoErrorSync(e) {
+    const c = String((e && (e.code || e.message)) || e || 'error');
+    if (/permission-denied/i.test(c)) return 'Firestore no permite guardar (revisá las reglas de «respaldos»)';
+    if (/unavailable|network|offline/i.test(c)) return 'sin conexión a internet';
+    return c;
+  }
+  function textoEstadoSync() {
+    if (ultimoSync.ok === false) return 'Error: ' + ultimoSync.error;
+    if (ultimoSync.cuando) return textoHaceCuanto(ultimoSync.cuando);
+    return 'Todavía no se respaldó en esta sesión';
+  }
 
   function listarClavesCuenta() {
     const prefijo = 'cuenta:' + uidAlmacen + ':';
@@ -9965,7 +10014,7 @@ body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outlin
   });
   setInterval(() => { try { if (estadoNube.estado === 'ok') actualizarIndicadorNube(false); } catch (e) {} }, 30000);
 
-  function programarRespaldoNube(ms = 15000) {
+  function programarRespaldoNube(ms = 4000) {
     if (restaurandoNube || !uidAlmacen) return;
     if (temporizadorRespaldo) clearTimeout(temporizadorRespaldo);
     if (estadoNube.estado === 'ok') { estadoNube.estado = 'pendiente'; try { actualizarIndicadorNube(false); } catch (e) {} }
@@ -9976,36 +10025,61 @@ body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outlin
     temporizadorRespaldo = null;
     const api = window.amigosAPI;
     const uid = uidAlmacen;
-    if (!uid || !api || !api.obtenerRespaldo || !api.guardarRespaldo) return;
+    if (!uid || !api || !api.obtenerRespaldo || !api.guardarRespaldo) return false;
     if (estadoNube.ids.size > 0) { estadoNube.estado = 'pendiente'; try { actualizarIndicadorNube(false); } catch (e) {} }
     try {
       const remoto = await api.obtenerRespaldo(uid);   // si no se puede consultar, lanza: no se pisa nada a ciegas
-      if (uid !== uidAlmacen) return;
-      const claves = {};
+      if (uid !== uidAlmacen) return false;
+      const clavesRemotas = (remoto && remoto.claves) || {};
+      const tsRemoto = (remoto && remoto.ts) || {};
+      const tsLocal = leerTs();
+      const claves = { ...clavesRemotas };
+      const tsFinal = { ...tsRemoto };
+      const locales = {};
       listarClavesCuenta().filter(k => !CLAVES_SIN_RESPALDO.includes(k)).forEach(k => {
         const v = almacenCuenta.getItem(k);
-        if (v !== null) claves[k] = v;
+        if (v !== null) locales[k] = v;
+      });
+      Object.keys(locales).forEach(k => {
+        claves[k] = combinarClave(k, locales[k], clavesRemotas[k], tsLocal[k], tsRemoto[k]);
+        const t = Math.max(tsLocal[k] || 0, tsRemoto[k] || 0);
+        if (t) tsFinal[k] = t;
+      });
+      // Lo que se borró en este equipo (y es más nuevo que la nube) se marca como borrado.
+      Object.keys(tsLocal).forEach(k => {
+        if (CLAVES_SIN_RESPALDO.includes(k) || locales[k] !== undefined) return;
+        if ((tsLocal[k] || 0) > (tsRemoto[k] || 0)) { claves[k] = null; tsFinal[k] = tsLocal[k]; }
       });
       const documento = {
         progreso: fusionarProgreso((remoto && remoto.progreso) || {}, progresoLocalPorJuego()),
-        claves: { ...((remoto && remoto.claves) || {}), ...claves }
+        claves,
+        ts: tsFinal
       };
-      if (JSON.stringify(documento).length > 900000) { console.warn('El respaldo es demasiado grande para Firestore; no se subió.'); return; }
+      if (JSON.stringify(documento).length > 900000) {
+        console.warn('El respaldo es demasiado grande para Firestore; no se subió.');
+        ultimoSync = { ok: false, cuando: ultimoSync.cuando, error: 'el respaldo es demasiado grande' };
+        return false;
+      }
       await api.guardarRespaldo(uid, documento);
-      if (uid !== uidAlmacen) return;
+      if (uid !== uidAlmacen) return false;
+      guardarTs({ ...tsLocal, ...tsFinal });
       const antes = estadoNube.ids.size;
       estadoNube.ids = new Set(Object.keys(documento.progreso).map(String));
       estadoNube.cuando = Date.now();
       estadoNube.estado = 'ok';
+      ultimoSync = { ok: true, cuando: Date.now(), error: null };
       guardarEstadoNubeLocal();
       actualizarIndicadorNube(estadoNube.ids.size !== antes);
+      return true;
     } catch (e) {
       console.warn('No se pudo respaldar en la nube:', e);
+      ultimoSync = { ok: false, cuando: ultimoSync.cuando, error: textoErrorSync(e) };
       if (estadoNube.ids.size > 0) {
         estadoNube.estado = 'error';
         try { actualizarIndicadorNube(false); } catch (e2) {}
       }
       if (!temporizadorRespaldo && uid === uidAlmacen) temporizadorRespaldo = setTimeout(respaldarEnNube, 60000);   // reintento
+      return false;
     }
   }
 
@@ -10015,34 +10089,63 @@ body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outlin
     const api = window.amigosAPI;
     if (!uidAlmacen || !api || !api.obtenerRespaldo) return;
     try {
-      if (almacenCuenta.getItem('biblioteca') !== null) return;   // este equipo ya tiene datos propios
+      const equipoVacio = almacenCuenta.getItem('biblioteca') === null;   // equipo sin datos de esta cuenta
       const respaldo = await Promise.race([
         api.obtenerRespaldo(uidAlmacen),
         pausa(7000).then(() => { throw new Error('tiempo agotado'); })
       ]);
       if (!respaldo) return;
       restaurandoNube = true;
-      Object.entries(respaldo.claves || {}).forEach(([k, v]) => almacenCuenta.setItem(k, v));
-      // Los juegos vuelven a la biblioteca como "No instalado", con sus horas, logros y maestrías (como en Steam).
-      const entradas = Object.keys(respaldo.progreso || {}).map(id => {
-        const p = respaldo.progreso[id] || {};
-        return {
-          id: isNaN(Number(id)) ? id : Number(id),
-          minutosJugados: p.minutosJugados || 0,
-          logrosDesbloqueados: p.logrosDesbloqueados || [],
-          carpetaInstalada: null,
-          rutaEjecutable: null,
-          ultimaVezJugado: p.ultimaVezJugado || null,
-          notas: p.notas || '',
-          tieneSave: false,
-          tamanoSaveKB: 0,
-          diasJugados: p.diasJugados || [],
-          maestrias: p.maestrias || {},
-          desinstalado: true
-        };
+
+      // Perfil (avatar, marco, estilo, desbloqueos...): se combina con lo de este equipo en cada inicio de sesión.
+      const tsRemoto = respaldo.ts || {};
+      const tsLocal = leerTs();
+      Object.entries(respaldo.claves || {}).forEach(([k, vR]) => {
+        if (CLAVES_SIN_RESPALDO.includes(k)) return;
+        const vL = almacenCuenta.getItem(k);
+        const nuevo = combinarClave(k, vL === null ? undefined : vL, vR, tsLocal[k], tsRemoto[k]);
+        if (nuevo === null || nuevo === undefined) { if (vL !== null) almacenCuenta.removeItem(k); }
+        else if (nuevo !== vL) almacenCuenta.setItem(k, nuevo);
+        if (tsRemoto[k]) tsLocal[k] = Math.max(tsLocal[k] || 0, tsRemoto[k]);
       });
-      almacenCuenta.setItem('biblioteca', JSON.stringify(entradas));   // y ya no es un equipo "vacío"
-      almacenCuenta.setItem('progreso-nube', '{}');
+      guardarTs(tsLocal);
+
+      // Juegos: los de la nube que faltan vuelven como "No instalado" (con horas, logros y maestrías);
+      // los que ya están se combinan quedándose con lo mayor.
+      const lista = equipoVacio ? [] : cargarBibliotecaCuenta();
+      const porId = new Map(lista.map(j => [String(j.id), j]));
+      let cambioBiblioteca = equipoVacio;
+      Object.keys(respaldo.progreso || {}).forEach(id => {
+        const p = respaldo.progreso[id] || {};
+        const l = porId.get(String(id));
+        if (!l) {
+          lista.push({
+            id: isNaN(Number(id)) ? id : Number(id),
+            minutosJugados: p.minutosJugados || 0,
+            logrosDesbloqueados: p.logrosDesbloqueados || [],
+            carpetaInstalada: null,
+            rutaEjecutable: null,
+            ultimaVezJugado: p.ultimaVezJugado || null,
+            notas: p.notas || '',
+            tieneSave: false,
+            tamanoSaveKB: 0,
+            diasJugados: p.diasJugados || [],
+            maestrias: p.maestrias || {},
+            desinstalado: true
+          });
+          cambioBiblioteca = true;
+        } else {
+          const antes = JSON.stringify([l.minutosJugados, l.logrosDesbloqueados, l.diasJugados, l.maestrias, l.ultimaVezJugado, l.notas]);
+          const f = fusionarJuego(p, {
+            minutosJugados: l.minutosJugados, logrosDesbloqueados: l.logrosDesbloqueados, diasJugados: l.diasJugados,
+            maestrias: l.maestrias || {}, ultimaVezJugado: l.ultimaVezJugado, notas: l.notas
+          });
+          const despues = JSON.stringify([f.minutosJugados, f.logrosDesbloqueados, f.diasJugados, f.maestrias, f.ultimaVezJugado, f.notas]);
+          if (antes !== despues) { Object.assign(l, f); cambioBiblioteca = true; }
+        }
+      });
+      if (cambioBiblioteca) almacenCuenta.setItem('biblioteca', JSON.stringify(lista));   // y ya no es un equipo "vacío"
+      if (equipoVacio) almacenCuenta.setItem('progreso-nube', '{}');
       estadoNube.ids = new Set(Object.keys(respaldo.progreso || {}).map(String));
       estadoNube.cuando = Date.now();
       estadoNube.estado = 'ok';
@@ -10051,6 +10154,25 @@ body.foco-visible :focus-visible { outline: 3px solid #ffd54a !important; outlin
       console.warn('No se pudo restaurar el respaldo (se reintenta la próxima vez):', e);
     } finally { restaurandoNube = false; }
   }
+
+  // Al cerrar el launcher, si quedó un cambio sin subir, se intenta subir ya.
+  window.addEventListener('beforeunload', () => { if (temporizadorRespaldo) { try { respaldarEnNube(); } catch (e) {} } });
+
+  // Botón "Sincronizar ahora" (Configuración → Acerca de)
+  document.addEventListener('click', async (ev) => {
+    const btn = ev.target && ev.target.closest && ev.target.closest('#btn-sync-perfil');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    const estado = document.getElementById('sync-perfil-estado');
+    if (estado) estado.textContent = 'Sincronizando…';
+    try {
+      await restaurarDesdeNube();
+      const ok = await respaldarEnNube();
+      if (estado) estado.textContent = textoEstadoSync();
+      const msg = ok ? 'Perfil sincronizado. Si cambió algo de otra computadora, reiniciá el launcher para verlo.' : 'No se pudo sincronizar: ' + (ultimoSync.error || 'error');
+      try { if (typeof avisar === 'function') avisar(msg, !ok); } catch (e) {}
+    } finally { btn.disabled = false; }
+  });
 
   // Al reinstalar un juego: devuelve (y consume) el progreso restaurado de ese juego, si había.
   function tomarProgresoRestaurado(idJuego) {
@@ -15076,6 +15198,15 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           <p class="nota-fangame" style="margin-top:14px;">
             ${icono('info', 'sm')}Este launcher es un proyecto de fans. No está afiliado a Nintendo ni a The Pokémon Company.
           </p>
+        </div>
+        ${cfgSubtitulo('Tu cuenta')}
+        <div class="config-bloque" data-kw="sincronizar nube respaldo perfil cuenta otra computadora avatar estilo nivel">
+          <h3>Sincronización del perfil</h3>
+          <p class="config-descripcion">Tu avatar, marco, estilo, nivel y desbloqueos se guardan en la nube para que los tengas en cualquier computadora donde inicies sesión.</p>
+          <div class="info-lista">
+            <div><span>Último respaldo</span><strong id="sync-perfil-estado">${escaparHTML(textoEstadoSync())}</strong></div>
+          </div>
+          <button type="button" id="btn-sync-perfil" class="btn-outline" style="margin-top:12px;">Sincronizar ahora</button>
         </div>
         ${cfgSubtitulo('Atajos de teclado')}
         <div class="config-bloque" data-kw="atajos teclado teclas">
