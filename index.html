@@ -13948,8 +13948,6 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
 
           <div class="fila-acciones">
             <button id="btn-ver-detalles" class="btn-outline">${icono('info')}Ver detalles</button>
-            ${(!juego.desinstalado && (juego.carpetaGuardadoJuegosGuardados || juego.carpetaGuardadoAppData || juego.rutaEjecutable)) ? `<button id="btn-diagnostico-partida" class="btn-outline">${icono('info', 'sm')}Diagnóstico de guardado</button>` : ''}
-            ${juego.rutaEjecutable ? `<button id="btn-nombres-switches" class="btn-outline">${icono('info', 'sm')}Nombres de switches (sin jugar)</button>` : ''}
             ${juego.desinstalado ? '' : `<button id="btn-desinstalar-biblioteca" class="btn-outline peligro">${icono('trash')}Desinstalar</button>`}
             <button id="btn-mas-opciones" class="btn-icono-solo">${icono('more', 'md')}</button>
           </div>
@@ -14018,32 +14016,6 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
       img.onclick = () => abrirVisorCapturas(juego.capturas || [], i);
     });
     activarExpansionLogros(contenedor);
-    const btnDiagnostico = document.getElementById('btn-diagnostico-partida');
-    if (btnDiagnostico) {
-      btnDiagnostico.onclick = async () => {
-        btnDiagnostico.disabled = true;
-        const resultado = await window.api.volcarDiagnosticoPartida(juego);
-        btnDiagnostico.disabled = false;
-        if (resultado.ok) {
-          alert('Listo. Se guardó un archivo con el detalle de tu partida en:\n\n' + resultado.ruta + '\n\nAbrilo con el Bloc de notas — si los logros reales no funcionan como esperás, mandame lo que dice ahí.');
-        } else {
-          alert('No se pudo leer el guardado: ' + resultado.error);
-        }
-      };
-    }
-    const btnNombresSwitches = document.getElementById('btn-nombres-switches');
-    if (btnNombresSwitches) {
-      btnNombresSwitches.onclick = async () => {
-        btnNombresSwitches.disabled = true;
-        const resultado = await window.api.leerNombresSwitches(juego);
-        btnNombresSwitches.disabled = false;
-        if (resultado.ok) {
-          alert('Listo. Se guardó la lista de nombres en:\n\n' + resultado.ruta + '\n\nAbrilo con el Bloc de notas — ahí están los nombres que el desarrollador le puso a cada switch, sin necesidad de jugar.');
-        } else {
-          alert('No se pudo leer los nombres: ' + resultado.error);
-        }
-      };
-    }
     document.getElementById('btn-ver-detalles').onclick = () => {
       document.getElementById('info-extra').classList.toggle('visible');
     };
@@ -15087,7 +15059,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
         ${cfgSubtitulo('El launcher')}
         <div class="config-bloque">
           <h3>Pokémon Launcher</h3>
-          <p class="config-descripcion">Versión 1.0.0 — tu pokédex de juegos.</p>
+          <p class="config-descripcion">Versión ${escaparHTML(String(window.__VERSION_APP || "—"))} — tu pokédex de juegos.</p>
           <div class="info-lista">
             <div><span>Juegos instalados</span><strong>${juegosInstalados.filter(j => !j.desinstalado).length}</strong></div>
             <div><span>Juegos en el catálogo</span><strong>${juegosDeEjemplo.length}</strong></div>

@@ -1038,53 +1038,6 @@ function listarVariablesDe(partida) {
 }
 
 
-// Data/System.rxdata vive al lado del .exe del juego (no es un guardado —
-// es parte del propio juego) y trae los nombres que el desarrollador le
-// puso a cada switch/variable en su editor de RPG Maker. Si el juego no
-// empaquetó sus datos en un .rgss2a encriptado, podemos leerlos directo.
-ipcMain.handle('leer-nombres-switches', async (event, juego) => {
-  try {
-    if (!juego.rutaEjecutable) {
-      return { ok: false, error: 'Este juego no tiene ruta de ejecutable configurada.' };
-    }
-
-    const rutaSystem = path.join(path.dirname(juego.rutaEjecutable), 'Data', 'System.rxdata');
-    if (!fs.existsSync(rutaSystem)) {
-      return {
-        ok: false,
-        error: `No encontré "${rutaSystem}". Probablemente el juego empaquetó su carpeta Data dentro de un archivo .rgss2a encriptado — en ese caso hay que sacarlo de ahí, que es otra historia.`
-      };
-    }
-
-    const sistema = await decodificarPartida(rutaSystem);
-    const switches = leerCampo(sistema, ['switches']);
-    const variables = leerCampo(sistema, ['variables']);
-
-    function formatearLista(lista) {
-      if (!Array.isArray(lista)) return '(no se encontró la lista)';
-      const lineas = [];
-      lista.forEach((nombre, indice) => {
-        if (typeof nombre === 'string' && nombre.trim() !== '') {
-          lineas.push(`  [${indice}] ${nombre}`);
-        }
-      });
-      return lineas.length ? lineas.join('\n') : '(todos sin nombre)';
-    }
-
-    let texto = '===== NOMBRES DE SWITCHES (puestos por el desarrollador en su editor) =====\n\n';
-    texto += formatearLista(switches) + '\n\n';
-    texto += '===== NOMBRES DE VARIABLES =====\n\n';
-    texto += formatearLista(variables) + '\n';
-
-    const rutaSalida = path.join(app.getPath('userData'), `switches-nombrados-${juego.id}.txt`);
-    fs.writeFileSync(rutaSalida, texto, 'utf-8');
-
-    return { ok: true, ruta: rutaSalida };
-  } catch (error) {
-    console.error('No se pudo leer Data/System.rxdata:', error);
-    return { ok: false, error: error.message };
-  }
-});
 
 // Saca de una partida ya decodificada todo lo que usan los logros (equipo, medallas, Pokédex,
 // switches, variables...). La usan tanto leer-progreso-real (al cerrar el juego) como el
@@ -1254,85 +1207,6 @@ ipcMain.handle('leer-progreso-real', async (event, juego) => {
   }
 });
 
-ipcMain.handle('volcar-diagnostico-partida', async (event, juego) => {
-  try {
-    const carpeta = carpetaDeGuardadoDe(juego);
-    if (!carpeta) return { ok: false, error: 'Este juego no tiene carpeta de guardado configurada.' };
-
-    const archivo = buscarArchivoDeGuardadoMasReciente(carpeta);
-    if (!archivo) return { ok: false, error: 'Todavía no encontramos un archivo de guardado.' };
-
-    const partida = await decodificarPartida(archivo);
-
-    const vistos = new Set();
-    function volcar(nodo, profundidad) {
-      const sangria = '  '.repeat(profundidad);
-      if (profundidad > 8) return sangria + '...(demasiado profundo)\n';
-      if (nodo === null || nodo === undefined) return sangria + 'nil\n';
-      if (typeof nodo === 'symbol') return sangria + ':' + nodo.description + '\n';
-
-      if (typeof nodo !== 'object') {
-        return sangria + JSON.stringify(nodo) + '\n';
-      }
-      if (vistos.has(nodo)) return sangria + '(referencia repetida)\n';
-      vistos.add(nodo);
-
-      if (Array.isArray(nodo)) {
-        let texto = sangria + `Array (${nodo.length} elementos)\n`;
-        nodo.slice(0, 15).forEach((item, i) => {
-          texto += sangria + `  [${i}]\n` + volcar(item, profundidad + 2);
-        });
-        if (nodo.length > 15) texto += sangria + `  ...y ${nodo.length - 15} más\n`;
-        return texto;
-      }
-
-      const nombreClase = nodo.class && (nodo.class.description || String(nodo.class));
-      let texto = sangria + (nombreClase ? `<${nombreClase}>\n` : 'Hash/Objeto\n');
-      const claves = todasLasClaves(nodo).slice(0, 40);
-      claves.forEach(clave => {
-        const etiqueta = typeof clave === 'symbol' ? ':' + clave.description : clave;
-        texto += sangria + `  ${etiqueta}:\n` + volcar(nodo[clave], profundidad + 2);
-      });
-      return texto;
-    }
-
-    const textoFinal = volcar(partida, 0);
-
-    // Resumen SIN recortar de switches/variables — el árbol de arriba corta
-    // los arrays largos en 15 elementos, y los switches de eventos de
-    // historia suelen estar mucho más adelante que eso.
-    function listarVariablesNoVacias() {
-      const nodo = buscarPorClase(partida, /Game_Variables/i);
-      const datos = nodo ? leerCampo(nodo, ['data']) : null;
-      if (!Array.isArray(datos)) return [];
-      const resultado = [];
-      datos.forEach((valor, indice) => {
-        if (valor !== null && valor !== undefined && valor !== 0 && valor !== '') {
-          resultado.push(`  [${indice}] = ${JSON.stringify(valor)}`);
-        }
-      });
-      return resultado;
-    }
-
-    const switchesActivos = listarSwitchesActivosDe(partida);
-    const variablesNoVacias = listarVariablesNoVacias();
-
-    let resumen = '===== RESUMEN — SWITCHES Y VARIABLES (completo, sin recortar) =====\n\n';
-    resumen += `Switches en TRUE (${switchesActivos.length} activos):\n`;
-    resumen += (switchesActivos.length ? switchesActivos.join(', ') : '(ninguno)') + '\n\n';
-    resumen += `Variables con valor (${variablesNoVacias.length} de 235):\n`;
-    resumen += (variablesNoVacias.length ? variablesNoVacias.join('\n') : '  (ninguna)') + '\n\n';
-    resumen += '===== ÁRBOL COMPLETO (este sí recorta arrays largos a 15 items) =====\n\n';
-
-    const rutaSalida = path.join(app.getPath('userData'), `diagnostico-${juego.id}.txt`);
-    fs.writeFileSync(rutaSalida, resumen + textoFinal, 'utf-8');
-
-    return { ok: true, ruta: rutaSalida };
-  } catch (error) {
-    console.error('No se pudo diagnosticar la partida:', error);
-    return { ok: false, error: error.message };
-  }
-});
 
 /* ===================== CONFIGURACIÓN ===================== */
 
@@ -1461,7 +1335,16 @@ function iniciarActualizador() {
     });
     autoUpdater.quitAndInstall(true, true);   // instalación silenciosa y vuelve a abrirse sola
   });
-  autoUpdater.on('error', (error) => console.warn('Actualizador:', error && error.message));
+  // Registro del actualizador en la carpeta de datos (actualizador.log): sirve para ver por qué no actualiza en una PC.
+  const registrarActualizador = (texto) => {
+    try { fs.appendFileSync(path.join(app.getPath('userData'), 'actualizador.log'), new Date().toISOString() + ' ' + texto + '\n'); } catch (e) {}
+  };
+  registrarActualizador('Versión instalada: ' + app.getVersion());
+  autoUpdater.on('checking-for-update', () => registrarActualizador('Buscando actualizaciones...'));
+  autoUpdater.on('update-not-available', (info) => registrarActualizador('Sin novedades (última publicada: ' + (info && info.version) + ')'));
+  autoUpdater.on('update-available', (info) => registrarActualizador('Versión nueva encontrada: ' + (info && info.version)));
+  autoUpdater.on('update-downloaded', (info) => registrarActualizador('Descargada: ' + (info && info.version)));
+  autoUpdater.on('error', (error) => { console.warn('Actualizador:', error && error.message); registrarActualizador('ERROR: ' + (error && error.message)); });
 
   const buscar = () => autoUpdater.checkForUpdates().catch((error) => console.warn('No se pudo buscar actualizaciones:', error && error.message));
   buscar();
