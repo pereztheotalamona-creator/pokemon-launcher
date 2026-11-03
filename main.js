@@ -1441,17 +1441,25 @@ function iniciarActualizador() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;   // si elige "Más tarde", se instala al cerrar el launcher
 
+  // Actualización FORZADA: no se puede elegir "más tarde". Apenas se baja la versión nueva se instala y el launcher se reabre solo.
+  autoUpdater.on('update-available', () => {
+    if (ventanaPrincipal && !ventanaPrincipal.isDestroyed()) ventanaPrincipal.setProgressBar(2); // barra indeterminada en la barra de tareas
+  });
+  autoUpdater.on('download-progress', (p) => {
+    if (ventanaPrincipal && !ventanaPrincipal.isDestroyed()) ventanaPrincipal.setProgressBar((p.percent || 0) / 100);
+  });
   autoUpdater.on('update-downloaded', async (info) => {
-    const { response } = await dialog.showMessageBox(ventanaPrincipal && !ventanaPrincipal.isDestroyed() ? ventanaPrincipal : undefined, {
+    if (ventanaPrincipal && !ventanaPrincipal.isDestroyed()) ventanaPrincipal.setProgressBar(-1);
+    await dialog.showMessageBox(ventanaPrincipal && !ventanaPrincipal.isDestroyed() ? ventanaPrincipal : undefined, {
       type: 'info',
-      buttons: ['Reiniciar ahora', 'Más tarde'],
+      buttons: ['Actualizar ahora'],
       defaultId: 0,
-      cancelId: 1,
-      title: 'Actualización lista',
+      noLink: true,
+      title: 'Actualización obligatoria',
       message: 'Hay una versión nueva del launcher (' + info.version + ').',
-      detail: 'Se instala al reiniciar. Si elegís "Más tarde", se instala sola la próxima vez que cierres el launcher.'
+      detail: 'Se va a instalar ahora y el launcher se abrirá solo cuando termine.'
     });
-    if (response === 0) autoUpdater.quitAndInstall(true, true);   // instalación silenciosa y vuelve a abrirse sola
+    autoUpdater.quitAndInstall(true, true);   // instalación silenciosa y vuelve a abrirse sola
   });
   autoUpdater.on('error', (error) => console.warn('Actualizador:', error && error.message));
 
