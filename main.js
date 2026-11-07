@@ -385,15 +385,53 @@ function buscarCarpetaIgnorandoFormato(base, nombre) {
   } catch (e) {}
   return exacta;
 }
+// Busca la carpeta de guardado en LAS DOS ubicaciones (algunos juegos guardan en una y otros en la otra):
+//   C:\\Users\\<usuario>\\Saved Games (\"Juegos guardados\")\\<carpeta del juego>
+//   C:\\Users\\<usuario>\\AppData\\Roaming\\<carpeta del juego>
+// Sirve el nombre de carpeta de cualquiera de los dos campos del catálogo (y el nombre del juego como respaldo),
+// se pruebe en ambas ubicaciones. Si hay guardados en las dos, gana la carpeta con el guardado más reciente.
+function basesDeGuardado() {
+  const bases = [];
+  const home = os.homedir();
+  bases.push(path.join(home, 'Saved Games'));
+  bases.push(path.join(home, 'Juegos guardados'));
+  if (process.env.USERPROFILE && process.env.USERPROFILE !== home) {
+    bases.push(path.join(process.env.USERPROFILE, 'Saved Games'));
+    bases.push(path.join(process.env.USERPROFILE, 'Juegos guardados'));
+  }
+  bases.push(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'));
+  return bases.filter((b, i) => b && bases.indexOf(b) === i && (() => { try { return fs.statSync(b).isDirectory(); } catch (e) { return false; } })());
+}
+function fechaGuardadoMasReciente(carpeta) {
+  let max = 0;
+  buscarArchivosDeGuardado(carpeta).forEach(f => { try { max = Math.max(max, fs.statSync(f).mtimeMs); } catch (e) {} });
+  return max;
+}
 function resolverCarpetaGuardado(juego) {
-  const candidatas = [];
-  if (juego.carpetaGuardadoJuegosGuardados) {
-    candidatas.push(buscarCarpetaIgnorandoFormato(path.join(os.homedir(), 'Saved Games'), juego.carpetaGuardadoJuegosGuardados));
+  const conCampos = [juego.carpetaGuardadoJuegosGuardados, juego.carpetaGuardadoAppData].filter(Boolean);
+  const nombres = conCampos.slice();
+  if (juego.nombre) nombres.push(juego.nombre);
+  if (nombres.length) {
+    const unicos = nombres.filter((n, i) => nombres.findIndex(m => normalizarNombreCarpeta(m) === normalizarNombreCarpeta(n)) === i);
+    const candidatas = [];
+    basesDeGuardado().forEach(base => unicos.forEach(nombre => {
+      let carpeta = null;
+      try {
+        const buscado = normalizarNombreCarpeta(nombre);
+        const hallada = fs.readdirSync(base, { withFileTypes: true }).find(d => d.isDirectory() && (d.name === nombre || normalizarNombreCarpeta(d.name) === buscado));
+        if (hallada) carpeta = path.join(base, hallada.name);
+      } catch (e) {}
+      if (carpeta && !candidatas.includes(carpeta)) candidatas.push(carpeta);
+    }));
+    const conSaves = candidatas.filter(carpetaConSaves).sort((x, y) => fechaGuardadoMasReciente(y) - fechaGuardadoMasReciente(x));
+    if (conSaves.length) return conSaves[0];
+    // Juegos sin carpeta indicada en el catálogo: si no hay guardados en esas ubicaciones, se usa la carpeta del .exe.
+    if (!conCampos.length) return juego.rutaEjecutable ? path.dirname(juego.rutaEjecutable) : null;
+    if (candidatas.length) return candidatas[0];
+    // Nada encontrado: se devuelve la ruta \"esperada\" para que el mensaje de error la muestre.
+    if (juego.carpetaGuardadoJuegosGuardados) return path.join(os.homedir(), 'Saved Games', juego.carpetaGuardadoJuegosGuardados);
+    return path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), juego.carpetaGuardadoAppData);
   }
-  if (juego.carpetaGuardadoAppData && process.env.APPDATA) {
-    candidatas.push(buscarCarpetaIgnorandoFormato(process.env.APPDATA, juego.carpetaGuardadoAppData));
-  }
-  if (candidatas.length) return candidatas.find(carpetaConSaves) || candidatas[0];
   if (juego.rutaEjecutable) return path.dirname(juego.rutaEjecutable);
   return null;
 }
@@ -1028,6 +1066,26 @@ function listarSwitchesActivosDe(partida) {
   return activos;
 }
 
+// Interruptores locales (self-switches) en ON: $game_self_switches.@data = { [mapa, evento, "A"] => true }.
+// Se devuelven como "mapa,evento,letra" (ej: "84,7,A"). Los usa la maestría de Pokémon Iberia, porque
+// sus intercambios y encargos se marcan como terminados con el interruptor local A del evento.
+function listarInterruptoresLocalesDe(partida) {
+  const nodo = buscarPorClase(partida, /Game_SelfSwitches/i);
+  const datos = nodo ? leerCampo(nodo, ['data']) : null;
+  if (!datos) return [];
+  const claveATexto = (k) => Array.isArray(k) ? k.map(x => (typeof x === 'symbol' ? x.description : String(x))).join(',') : nombreDeClave(k);
+  const salida = [];
+  const agregar = (k, v) => {
+    if (v !== true) return;
+    const t = claveATexto(k);
+    if (/^\d+,\d+,[A-D]$/.test(t)) salida.push(t);
+  };
+  if (datos instanceof Map) datos.forEach((v, k) => agregar(k, v));
+  else if (Array.isArray(datos)) datos.forEach(par => { if (Array.isArray(par) && par.length === 2) agregar(par[0], par[1]); });
+  else if (typeof datos === 'object') todasLasClaves(datos).forEach(k => agregar(k, datos[k]));
+  return salida;
+}
+
 // Devuelve el array completo de $game_variables (números, texto, etc.),
 // para logros tipo "contador de X >= N" (ej: derrotas al Alto Mando).
 function listarVariablesDe(partida) {
@@ -1114,6 +1172,14 @@ function calcularStatsDePartida(partida) {
   // --- Datos extra para logros de Pokémon Realidea (y cualquier juego que los use) ---
   // Mapas pisados: $PokemonGlobal.visitedMaps es un array indexado por ID de mapa (true = visitado).
   const globalNodo = buscarPorClase(partida, /PokemonGlobal/i);
+  // Opciones del menú del juego ($PokemonSystem). Pokémon Realidea guarda ahí "Randomizar hab." y "Randomizar mov." (0 = No, 1 = Sí).
+  const sistemaNodo = buscarPorClase(partida, /^PokemonSystem$/i);
+  const opciones = {
+    randomHabilidades: leerCampo(sistemaNodo, ['randomabilities']),
+    randomMovimientos: leerCampo(sistemaNodo, ['randommoves']),
+    // Pokémon Realidea: opción "Randomlocke" del menú (0 = No, 1 = Sí).
+    randomlocke: leerCampo(sistemaNodo, ['randomlocke'])
+  };
   const mapasRaw = globalNodo ? leerCampo(globalNodo, ['visitedMaps']) : null;
   const mapasVisitados = [];
   if (Array.isArray(mapasRaw)) mapasRaw.forEach((v, idx) => { if (v === true) mapasVisitados.push(idx); });
@@ -1141,8 +1207,52 @@ function calcularStatsDePartida(partida) {
   // Pokémon que vino de un huevo (obtainMode 1 = huevo/eclosionado en Essentials).
   const hayPokemonDeHuevo = todosLosPokemon.some(p => leerCampo(p, ['obtainMode']) === 1 || (leerCampo(p, ['eggsteps']) || 0) > 0);
 
+
+  // --- Desafíos (Pokémon Añil: Nuzlocke / Randomlocke / sin bajas) ---
+  // Plugin Challenge Modes: $PokemonGlobal.challenge_state = { nº de Salón de la Fama => [:VICTORY, reglas] }.
+  // Se agrega solo si el guardado tiene datos de desafío; si no, queda en null.
+  function simboloATexto(v) {
+    if (typeof v === 'symbol') return v.description;
+    return textoDe(v).replace(/^:/, '');
+  }
+  function valoresDeHash(h) {
+    if (!h) return [];
+    if (h instanceof Map) return [...h.values()];
+    if (Array.isArray(h)) return h;
+    if (typeof h === 'object') return todasLasClaves(h).map(k => h[k]);
+    return [];
+  }
+  let desafio = null;
+  if (globalNodo) {
+    const estadoRaw = leerCampo(globalNodo, ['challenge_state']);
+    const reglasRaw = leerCampo(globalNodo, ['challenge_rules']);
+    const vidasRaw = leerCampo(globalNodo, ['challenge_lives']);
+    const victorias = [];
+    valoresDeHash(estadoRaw).forEach(entrada => {
+      if (Array.isArray(entrada) && simboloATexto(entrada[0]).toUpperCase() === 'VICTORY') {
+        victorias.push({ reglas: Array.isArray(entrada[1]) ? entrada[1].map(simboloATexto) : [] });
+      }
+    });
+    const idJugador = jugador ? leerCampo(jugador, ['id']) : null;
+    desafio = {
+      activo: leerCampo(globalNodo, ['challenge_started']) === true,
+      reglas: Array.isArray(reglasRaw) ? reglasRaw.map(simboloATexto) : [],
+      victorias,
+      random: leerCampo(globalNodo, ['random_enabled']) === true,
+      bajas: todosLosPokemon.filter(p => leerCampo(p, ['perma_faint']) === true).length,
+      vidas: typeof vidasRaw === 'number' ? vidasRaw : null,
+      idPartida: typeof idJugador === 'number' ? idJugador : null,
+      // Pokémon Ópalo: su Nuzlocke no tiene perma_faint; los caídos se quedan con 0 PS (no se pueden curar).
+      // Cuenta equipo + cajas, sin huevos. El index.html lo recuerda entre guardados (maestría "sin bajas").
+      // Pokémon Iberia / Ópalo: $PokemonGlobal.nuzlocke sigue en true mientras el Nuzlocke no se haya perdido.
+      nuzlocke: leerCampo(globalNodo, ['nuzlocke']) === true,
+      caidos: todosLosPokemon.filter(p => leerCampo(p, ['hp']) === 0 && !((leerCampo(p, ['eggsteps']) || 0) > 0)).length
+    };
+  }
+
   const switchesActivos = listarSwitchesActivosDe(partida);
   const variables = listarVariablesDe(partida);
+  const interruptoresLocales = listarInterruptoresLocalesDe(partida);
 
   return {
     tienePrimerPokemon: Array.isArray(equipo) && equipo.length > 0,
@@ -1163,6 +1273,9 @@ function calcularStatsDePartida(partida) {
     shinysActuales,
     tradeConProdigio,
     switchesActivos,
+    interruptoresLocales,
+    desafio,
+    opciones,
     variables
   };
 }
