@@ -225,7 +225,28 @@ async function listarSolicitudesRecibidas() {
     .where('para', '==', usuarioActual.uid)
     .where('estado', '==', 'pendiente')
     .get();
-  return resultado.docs.map(d => ({ id: d.id, ...d.data() }));
+  const solicitudes = resultado.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // La solicitud solo guarda el color de la pokébola. La foto elegida (personaje, marco y escenario)
+  // vive en el perfil público de quien la envió: la traemos para que se vea su avatar y no una pokébola roja.
+  const uidsRemitentes = [...new Set(solicitudes.map(s => s.de).filter(Boolean))];
+  for (let i = 0; i < uidsRemitentes.length; i += 10) {
+    try {
+      const perfiles = await db.collection('usuarios')
+        .where(firebase.firestore.FieldPath.documentId(), 'in', uidsRemitentes.slice(i, i + 10)).get();
+      perfiles.docs.forEach(p => {
+        const d = p.data();
+        solicitudes.filter(s => s.de === p.id).forEach(s => {
+          s.dePerfilPublico = d.perfilPublico || null;
+          s.deAvatarColor = d.avatarColor || s.deAvatarColor || null;
+          s.deNombre = d.nombreUsuario || s.deNombre;
+        });
+      });
+    } catch (e) {
+      console.warn('No se pudieron cargar los perfiles de quienes enviaron solicitud:', e);
+    }
+  }
+  return solicitudes;
 }
 
 async function aceptarSolicitud(solicitud) {
@@ -303,12 +324,17 @@ async function registrarActividadLogro(nombreJuego, nombreLogro) {
 
 async function obtenerActividadDeAmigos(uidsAmigos) {
   if (!uidsAmigos || uidsAmigos.length === 0) return [];
+  // Sin orderBy en el servidor: "uid in [...]" + orderBy('fecha') pide un índice compuesto en Firebase
+  // y, si no está creado, la consulta falla. Ordenamos acá en el cliente.
   const resultado = await db.collection('actividad')
     .where('uid', 'in', uidsAmigos.slice(0, 30))
-    .orderBy('fecha', 'desc')
-    .limit(30)
+    .limit(150)
     .get();
-  return resultado.docs.map(d => ({ id: d.id, ...d.data() }));
+  const ms = a => (a.fecha && a.fecha.toMillis) ? a.fecha.toMillis() : 0;
+  return resultado.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => ms(b) - ms(a))
+    .slice(0, 30);
 }
 
 /* ===================== RESPALDO DEL PROGRESO (sobrevive a reinstalar Windows) ===================== */

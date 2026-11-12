@@ -19897,6 +19897,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
   function establecerAvatarImagen(idPersonaje) {
     if (idPersonaje) almacenCuenta.setItem(CLAVE_AVATAR_IMAGEN, idPersonaje);
     else almacenCuenta.removeItem(CLAVE_AVATAR_IMAGEN);
+    try { if (window.__sincPerfilPronto) window.__sincPerfilPronto(); } catch (e) { /* no crítico */ }
   }
   function fondoDesbloqueado(f) {
     if (!f) return false;
@@ -19908,11 +19909,13 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
     if (idFondo && f && !fondoDesbloqueado(f)) return;
     if (idFondo) almacenCuenta.setItem(CLAVE_AVATAR_FONDO, idFondo);
     else almacenCuenta.removeItem(CLAVE_AVATAR_FONDO);
+    try { if (window.__sincPerfilPronto) window.__sincPerfilPronto(); } catch (e) { /* no crítico */ }
   }
   function establecerAvatarMarco(idMarco) {
     const marco = MARCOS_PERFIL.find(m => m.id === idMarco);
     if (!marco || !marcoDesbloqueado(marco)) return;
     almacenCuenta.setItem(CLAVE_AVATAR_MARCO, idMarco);
+    try { if (window.__sincPerfilPronto) window.__sincPerfilPronto(); } catch (e) { /* no crítico */ }
   }
 
   // Arma el contenido interior del avatar: el personaje solo, o el personaje superpuesto a un escenario.
@@ -21235,15 +21238,20 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
 
     try { rkSincronizarSiHaceFalta(); } catch (e) { /* no crítico */ }
 
+    // Si algo de Firestore falla (permisos, índice, red) NO tiramos abajo toda la pestaña:
+    // esa parte queda vacía y el resto se dibuja igual.
+    const miRender = window.__amigosRenderId = (window.__amigosRenderId || 0) + 1;
+    const seguro = async (fn, vacio) => { try { return await fn(); } catch (e) { console.warn('Amigos (Firestore):', e); return vacio; } };
     const [amigosReales, solicitudes] = await Promise.all([
-      window.amigosAPI.listarAmigos(),
-      window.amigosAPI.listarSolicitudesRecibidas()
+      seguro(() => window.amigosAPI.listarAmigos(), []),
+      seguro(() => window.amigosAPI.listarSolicitudesRecibidas(), [])
     ]);
     const actividad = (amigosReales.length === 0)
       ? []
-      : await window.amigosAPI.obtenerActividadDeAmigos(amigosReales.map(a => a.uid));
+      : await seguro(() => window.amigosAPI.obtenerActividadDeAmigos(amigosReales.map(a => a.uid)), []);
     const amigos = conAmigoDemo(amigosReales); // + amigo de ejemplo (ver MOSTRAR_USUARIOS_DEMO)
     try { await presCargarDe(amigos); } catch (e) { /* sin estado de amigos */ }
+    if (miRender !== window.__amigosRenderId) return; // se pidió otro render mientras cargaba: gana el último
     const jugandoAhora = amigos.filter(a => a.jugandoAhora).length;
 
     const tab = (id, nombre, contenido) =>
@@ -21322,8 +21330,17 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
       pintarCuentaAmigos(usuario);
     };
 
+    const TABS_AMIGOS = { 'tab-amigos-lista': 'lista', 'tab-amigos-solicitudes': 'solicitudes', 'tab-amigos-buscar': 'buscar' };
     const cambiarTab = (id, nombre) => {
-      document.getElementById(id).onclick = () => { vistaAmigosActual = nombre; renderizarAmigos(); };
+      document.getElementById(id).onclick = () => {
+        vistaAmigosActual = nombre;
+        Object.keys(TABS_AMIGOS).forEach(tid => {
+          const b = document.getElementById(tid);
+          if (b) b.classList.toggle('activa', TABS_AMIGOS[tid] === vistaAmigosActual);
+        });
+        pintarPanelAmigos(amigos, solicitudes, usuario);
+        try { if (window.__cxBotonesChat) window.__cxBotonesChat(); } catch (e) { /* no crítico */ }
+      };
     };
     cambiarTab('tab-amigos-lista', 'lista');
     cambiarTab('tab-amigos-buscar', 'buscar');
@@ -21384,7 +21401,9 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
       `;
       const input = document.getElementById('input-buscar-amigo');
       input.oninput = async () => {
-        const resultados = await window.amigosAPI.buscarUsuarios(input.value);
+        let resultados = [];
+        try { resultados = await window.amigosAPI.buscarUsuarios(input.value); }
+        catch (e) { console.warn('Buscar amigos:', e); }
         const contResultados = document.getElementById('resultados-buscar-amigo');
         contResultados.innerHTML = resultados.length === 0
           ? '<p class="panel-vacio">Sin resultados.</p>'
@@ -21397,9 +21416,15 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           `).join('');
         contResultados.querySelectorAll('button[data-uid]').forEach(btn => {
           btn.onclick = async () => {
-            await window.amigosAPI.enviarSolicitudAmistad(btn.dataset.uid, btn.dataset.nombre);
             btn.disabled = true;
-            btn.textContent = 'Enviada';
+            try {
+              await window.amigosAPI.enviarSolicitudAmistad(btn.dataset.uid, btn.dataset.nombre);
+              btn.textContent = 'Enviada';
+            } catch (e) {
+              console.warn('Enviar solicitud:', e);
+              btn.disabled = false;
+              btn.textContent = (e && e.code === 'permission-denied') ? 'Sin permiso' : 'Reintentar';
+            }
           };
         });
       };
@@ -21416,7 +21441,7 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
           ? '<p class="panel-vacio">No tenés solicitudes pendientes.</p>'
           : solicitudes.map(s => `
             <div class="amigo-item">
-              ${avatarHTML({ avatarColor: s.deAvatarColor }, 'mediana')}
+              ${avatarHTML({ uid: s.de, nombreUsuario: s.deNombre, avatarColor: s.deAvatarColor, perfilPublico: s.dePerfilPublico }, 'mediana')}
               <div style="flex:1;min-width:0;" class="amigo-nombre">${s.deNombre}</div>
               <button class="btn-tarjeta" data-aceptar="${s.id}" style="margin-right:6px;">${icono('check','sm')}</button>
               <button class="btn-icono-solo" data-rechazar="${s.id}">${icono('quitarAmigo','sm')}</button>
@@ -21427,13 +21452,15 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
       panel.querySelectorAll('[data-aceptar]').forEach(btn => {
         btn.onclick = async () => {
           const solicitud = solicitudes.find(s => s.id === btn.dataset.aceptar);
-          await window.amigosAPI.aceptarSolicitud(solicitud);
+          try { await window.amigosAPI.aceptarSolicitud(solicitud); }
+          catch (e) { console.warn('Aceptar solicitud:', e); try { avisarLauncher('No se pudo aceptar la solicitud. Revisá las reglas de Firestore.'); } catch (x) {} }
           renderizarAmigos();
         };
       });
       panel.querySelectorAll('[data-rechazar]').forEach(btn => {
         btn.onclick = async () => {
-          await window.amigosAPI.rechazarSolicitud(btn.dataset.rechazar);
+          try { await window.amigosAPI.rechazarSolicitud(btn.dataset.rechazar); }
+          catch (e) { console.warn('Rechazar solicitud:', e); }
           renderizarAmigos();
         };
       });
@@ -21578,6 +21605,12 @@ Todos los juegos del catálogo son fan games hechos por la comunidad. No son pro
       platMes: m.plat, maeMes: m.mae, minMes: m.min
     };
   }
+
+  // Sube el perfil público poco después de cambiar foto/marco/fondo (así tus amigos ven tu avatar enseguida).
+  window.__sincPerfilPronto = function () {
+    clearTimeout(window.__sincPerfilT);
+    window.__sincPerfilT = setTimeout(() => { try { sincronizarEstadisticasAmigos(); } catch (e) { /* no crítico */ } }, 800);
+  };
 
   function sincronizarEstadisticasAmigos() {
     if (!(window.amigosAPI && window.amigosAPI.obtenerUsuarioActual && window.amigosAPI.obtenerUsuarioActual())) return;
@@ -23682,10 +23715,12 @@ function cxAbrirChat(uid) {
   const el = cxChatEl(); el.querySelector('.cab span').textContent = u.nombreUsuario; el.querySelector('.cuerpo').dataset.firma = ''; el.classList.add('abierto');
   clearInterval(cxChatTimer); cxChatPintar(); cxChatTimer = setInterval(cxChatPintar, 4000); el.querySelector('input').focus();
 }
-{ const _rA = renderizarAmigos; renderizarAmigos = async function () { const r = await _rA.apply(this, arguments);
+{ const _rA = renderizarAmigos; renderizarAmigos = async function () { const r = await _rA.apply(this, arguments); window.__cxBotonesChat(); return r; };
+  window.__cxBotonesChat = function () {
     try { document.querySelectorAll('#amigos-panel-izq .amigo-card').forEach(c => { if (c.querySelector('.cx-btn-chat')) return;
       const b = c.querySelector('[data-nombre-perfil]'); if (!b) return; const bt = document.createElement('button'); bt.className = 'btn-tarjeta cx-btn-chat'; bt.innerHTML = icono('message', 'sm') + 'Chat';
-      bt.onclick = ev => { ev.stopPropagation(); cxAbrirChat(b.dataset.nombrePerfil); }; c.appendChild(bt); }); } catch (e) {} return r; }; }
+      bt.onclick = ev => { ev.stopPropagation(); cxAbrirChat(b.dataset.nombrePerfil); }; c.appendChild(bt); }); } catch (e) {}
+  }; }
 
 
 // ===================== CHATS ESTILO DISCORD =====================
@@ -23833,10 +23868,10 @@ const PRES_INACTIVO_MS = 30 * 60 * 1000;
 const PRES_VENCE_MS = 150 * 1000;
 const PRES_ESTADOS = {
   conectado:    { txt: 'Conectado',    color: '#2ecc71', desc: 'Tus amigos te ven en línea' },
-  ausente:      { txt: 'Ausente',      color: '#f39c12', desc: 'No te llegan avisos de mensajes' },
-  desconectado: { txt: 'Desconectado', color: '#8a97a8', desc: 'Tus amigos te ven fuera de línea' }
+  ausente:      { txt: 'Ausente',      color: '#f39c12', desc: 'Los avisos te llegan al volver a Conectado' },
+  desconectado: { txt: 'Desconectado', color: '#8a97a8', desc: 'Fuera de línea; los mensajes te llegan al conectarte' }
 };
-const PRES = { auto: false, ultAct: Date.now(), ultHb: 0, uid: null, apl: null, ultCarga: 0, ultAmigos: 0, cache: new Map(), esc: new Map(), vistos: new Set() };
+const PRES = { auto: false, ultAct: Date.now(), ultHb: 0, uid: null, apl: null, ultCarga: 0, ultAmigos: 0, cache: new Map(), esc: new Map(), vistos: new Set(), pend: [], flushT: null };
 
 const presManual = () => { const e = configuracionActual && configuracionActual.estadoPresencia; return PRES_ESTADOS[e] ? e : 'conectado'; };
 function presEstado() { const m = presManual(); return (m === 'conectado' && PRES.auto) ? 'ausente' : m; }
@@ -23884,6 +23919,7 @@ function presAplicar() {
   presPintarBarra();
   const e = presEstado(), antes = PRES.apl; PRES.apl = e;
   presPublicar();
+  try { presFlushSoon(); } catch (x) { /* entrega de avisos pendientes */ }
   // Desconectado: tampoco se muestra "Jugando a …". Al volver, se vuelve a mostrar si hay un juego abierto.
   try {
     const jugando = (typeof CAP !== 'undefined' && CAP.juego) ? CAP.juego.nombre : null;
@@ -23940,7 +23976,40 @@ function presMensajeNuevo(a, d, prueba) {
   if (!prueba && typeof configuracionActual !== 'undefined' && configuracionActual.avisosMensajes === false) return;   // avisos apagados en Configuración (queda el puntito en Chats)
   try { reproducirSonido('mensaje'); } catch (e) {}
   if (!document.hasFocus() && (typeof configuracionActual === 'undefined' || configuracionActual.avisosEscritorio !== false) && window.api && window.api.notificarMensaje) window.api.notificarMensaje({ titulo: quien, cuerpo: txt, uid: a.uid });
-  else presToast(a, quien, txt);
+  presToast(a, quien, txt);   // el aviso dentro del launcher sale siempre (no solo cuando la ventana está en foco)
+}
+
+/* ----- Mensajes pendientes -----
+   Todo mensaje nuevo pasa por acá. Si estás Conectado se avisa enseguida. Si estás Desconectado o Ausente
+   (o el launcher estaba cerrado) queda pendiente y se avisa apenas vuelvas a Conectado o abras el launcher.
+   Se guarda en este equipo hasta qué momento ya viste mensajes y qué mensajes ya se avisaron, para no repetir. */
+const presClave = pre => { try { return pre + cxYo().uid; } catch (e) { return null; } };
+function presLeerLS(k, vacio) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? vacio : v; } catch (e) { return vacio; } }
+function presMarcarVisto(iso) {
+  const k = presClave('pres_visto_'); if (!k || !iso) return;
+  try { const act = localStorage.getItem(k) || ''; if (!act || String(iso) > act) localStorage.setItem(k, String(iso)); } catch (e) {}
+}
+function presEncolar(a, d, id) {
+  if (presLeerLS(presClave('pres_notif_'), []).includes(id)) return;     // ya se avisó antes
+  if (PRES.pend.some(x => x.id === id)) return;
+  PRES.pend.push({ a, d, id });
+  presFlushSoon();
+}
+function presFlushSoon() { clearTimeout(PRES.flushT); PRES.flushT = setTimeout(presFlush, 700); }
+function presFlush() {
+  if (!PRES.pend.length) return;
+  if (presEstado() !== 'conectado') return;                              // Desconectado/Ausente: quedan guardados
+  const items = PRES.pend.splice(0);
+  const k = presClave('pres_notif_');
+  if (k) { try { const l = presLeerLS(k, []); items.forEach(x => l.push(x.id)); localStorage.setItem(k, JSON.stringify(l.slice(-80))); } catch (e) {} }
+  items.forEach(x => presMarcarVisto(x.d && x.d.fecha));
+  const porAmigo = new Map();                                            // un aviso por amigo, aunque hayan sido varios mensajes
+  items.forEach(x => { const g = porAmigo.get(x.a.uid) || { a: x.a, msgs: [] }; g.msgs.push(x.d); porAmigo.set(x.a.uid, g); });
+  let i = 0;
+  porAmigo.forEach(g => {
+    const d = g.msgs.length > 1 ? { texto: 'Te envió ' + g.msgs.length + ' mensajes nuevos' } : g.msgs[0];
+    setTimeout(() => presMensajeNuevo(g.a, d), (i++) * 3500);
+  });
 }
 
 function presProbarMensaje() {
@@ -23952,7 +24021,7 @@ if (window.api && window.api.onAbrirChat) window.api.onAbrirChat(uid => { if (ui
 
 function presDetenerEscuchas() { PRES.esc.forEach(off => { try { off(); } catch (e) {} }); PRES.esc.clear(); }
 
-// Una escucha por amigo: solo mensajes nuevos (de los últimos 2 min en adelante). Lo que ya estaba al conectar no avisa.
+// Una escucha por amigo: mensajes desde la última vez que estuviste al día. Lo ya avisado no se repite.
 async function presIniciarEscuchas() {
   PRES.ultAmigos = Date.now();
   let f = null; try { f = firebase.apps.length ? firebase.firestore() : null; } catch (e) {}
@@ -23964,18 +24033,18 @@ async function presIniciarEscuchas() {
   lista.forEach(a => {
     if (!a || !a.uid || PRES.esc.has(a.uid)) return;
     const ruta = 'cxChats/' + [yo.uid, a.uid].sort().join('_') + '/mensajes';
-    const desde = new Date(Date.now() - 120000).toISOString();
-    let primera = true;
+    // Desde la última vez que estuviste al día (menos un margen por relojes distintos); la primera vez, desde ahora.
+    const visto = (() => { try { return localStorage.getItem(presClave('pres_visto_')) || ''; } catch (e) { return ''; } })();
+    const desde = visto ? new Date(Date.parse(visto) - 120000).toISOString() : new Date().toISOString();
     try {
       const off = f.collection(ruta).where('fecha', '>', desde).onSnapshot(snap => {
         snap.docChanges().forEach(ch => {
           if (ch.type !== 'added') return;
           const id = ruta + '/' + ch.doc.id; if (PRES.vistos.has(id)) return; PRES.vistos.add(id);
           const d = ch.doc.data();
-          if (primera || !d || d.de === yo.uid) return;                 // lo que ya había, o lo que mandé yo
-          presMensajeNuevo(a, d);
+          if (!d || d.de === yo.uid) return;                            // lo que mandé yo no avisa
+          presEncolar(a, d, id);                                        // se avisa ya (Conectado) o al volver a Conectado
         });
-        primera = false;
       }, () => { /* reglas sin permiso: sin avisos */ });
       PRES.esc.set(a.uid, off);
     } catch (e) {}
@@ -23999,6 +24068,8 @@ function presTick() {
   const ahora = Date.now();
   if (typeof juegoEnMarcha !== 'undefined' && juegoEnMarcha) PRES.ultAct = ahora;          // jugar cuenta como actividad
   else if (presManual() === 'conectado' && !PRES.auto && ahora - PRES.ultAct >= PRES_INACTIVO_MS) { PRES.auto = true; presAplicar(); }
+  if (presEstado() === 'conectado' && !PRES.pend.length) presMarcarVisto(cxAhora());      // estás al día
+  if (PRES.pend.length && presEstado() === 'conectado') presFlushSoon();
   if (presEstado() !== 'desconectado' && ahora - PRES.ultHb >= 60000) presPublicar();     // latido
   if (ahora - PRES.ultAmigos > 120000) presIniciarEscuchas();                             // amigos nuevos
   const chat = document.getElementById('dc-fondo');
@@ -24012,7 +24083,7 @@ try {
   const am = window.amigosAPI, cs = am && am.cerrarSesion;
   if (cs && !cs.__pres) { am.cerrarSesion = async function () { try { await presPublicar('desconectado'); } catch (e) {} return cs.apply(this, arguments); }; am.cerrarSesion.__pres = true; }
 } catch (e) {}
-window.addEventListener('beforeunload', () => { try { presPublicar('desconectado'); } catch (e) {} });
+window.addEventListener('beforeunload', () => { try { if (presEstado() === 'conectado' && !PRES.pend.length) presMarcarVisto(cxAhora()); } catch (e) {} try { presPublicar('desconectado'); } catch (e) {} });
 
 try { document.body.appendChild(document.getElementById('visor-overlay')); } catch (e) {}   // el visor de capturas, por encima del chat
 presPintarBarra();
